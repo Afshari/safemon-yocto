@@ -14,7 +14,8 @@ meta-raspberrypi/
 meta-openembedded/
 
 # Wi-Fi credentials - NEVER commit
-meta-custom/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf
+meta-safemon/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf
+
 
 # Python
 __pycache__/
