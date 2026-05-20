@@ -1,0 +1,34 @@
+# Yocto build directory - never commit this
+build-rpi4/
+build/
+
+# Yocto downloads cache
+downloads/
+
+# Yocto sstate cache
+sstate-cache/
+
+# Poky and other layers - cloned separately
+poky/
+meta-raspberrypi/
+meta-openembedded/
+
+# Wi-Fi credentials - NEVER commit
+meta-custom/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# CMake build artifacts
+safemon/build/
+*.o
+*.a
+*.so
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
