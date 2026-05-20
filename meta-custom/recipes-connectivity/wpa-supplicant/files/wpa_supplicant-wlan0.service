@@ -1,0 +1,11 @@
+[Unit]
+Description=WPA supplicant for wlan0
+Before=network.target
+After=dbus.service
+
+[Service]
+ExecStart=/sbin/wpa_supplicant -u -s -c /etc/wpa_supplicant/wpa_supplicant-wlan0.conf -i wlan0
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
