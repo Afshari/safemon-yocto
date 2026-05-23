@@ -13,6 +13,6 @@ S = "${WORKDIR}/safemon"
 
 inherit cmake
 
-DEPENDS = "hiredis"
+DEPENDS = "hiredis pkgconfig"
 
 FILES:${PN} += "${bindir}/safemon-app"
