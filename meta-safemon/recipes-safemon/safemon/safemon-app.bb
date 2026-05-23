@@ -9,7 +9,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/include \
           "
 
-S = "${WORKDIR}"
+S = "${WORKDIR}/safemon"
 
 inherit cmake
 
