@@ -9,4 +9,4 @@ inherit cmake
 
 DEPENDS = "hiredis"
 
-do_configure[depends] += "hiredis:do_populate_sysroot"
+FILES:${PN} += "${bindir}/safemon"
