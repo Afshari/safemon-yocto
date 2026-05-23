@@ -13,6 +13,7 @@ SRCREV = "998e64044d4eae1897eb6011c202d5385db8d3d3"
 SRC_URI = " \
     https://github.com/raspberrypi/linux.git;branch=rpi-6.12.y;destsuffix=git \
     file://preempt_rt.cfg;subdir=fragments \
+    file://vcan.cfg;subdir=fragments \
 "
 
 KERNEL_CONFIG_FRAGMENTS = "${WORKDIR}/fragments/preempt_rt.cfg"

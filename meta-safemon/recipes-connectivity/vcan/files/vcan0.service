@@ -1,0 +1,13 @@
+[Unit]
+Description=Virtual CAN interface vcan0
+After=network.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/sbin/modprobe vcan
+ExecStart=/sbin/ip link add dev vcan0 type vcan
+ExecStart=/sbin/ip link set up vcan0
+
+[Install]
+WantedBy=multi-user.target
