@@ -11,7 +11,7 @@ PV = "${LINUX_VERSION}+git"
 SRCREV = "998e64044d4eae1897eb6011c202d5385db8d3d3"
 
 SRC_URI = " \
-    git://github.com/raspberrypi/linux.git;branch=rpi-6.12.y;protocol=https \
+    https://github.com/raspberrypi/linux.git;branch=rpi-6.12.y;destsuffix=git \
     file://preempt_rt.cfg;subdir=fragments \
 "
 
