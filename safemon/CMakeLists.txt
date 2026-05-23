@@ -8,8 +8,8 @@ find_library(HIREDIS_LIB hiredis REQUIRED)
 find_path(HIREDIS_INCLUDE hiredis/hiredis.h REQUIRED)
 
 add_executable(safemon-app
-    src/main.cpp
     src/can_reader.cpp
+    src/main.cpp
 )
 
 target_include_directories(safemon-app PRIVATE
