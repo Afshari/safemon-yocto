@@ -7,10 +7,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_library(HIREDIS_LIB hiredis REQUIRED)
 find_path(HIREDIS_INCLUDE hiredis/hiredis.h REQUIRED)
 
-add_executable(safemon-app src/main.cpp)
+add_executable(safemon-app
+    src/can_reader.cpp
+    src/main.cpp
+)
 
 target_include_directories(safemon-app PRIVATE
-    include
+    inc
     ${HIREDIS_INCLUDE}
 )
 

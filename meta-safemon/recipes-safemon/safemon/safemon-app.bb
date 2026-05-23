@@ -6,7 +6,8 @@ FILESEXTRAPATHS:prepend := "${TOPDIR}/../:"
 
 SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/main.cpp \
-           file://safemon/include \
+           file://safemon/src/can_reader.cpp \
+           file://safemon/inc/can_reader.h \
           "
 
 S = "${WORKDIR}/safemon"
