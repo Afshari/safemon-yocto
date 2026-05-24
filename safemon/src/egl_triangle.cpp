@@ -102,6 +102,13 @@ static bool drm_open(DrmState& d) {
         if (c->connection == DRM_MODE_CONNECTED && c->count_modes > 0) {
             d.conn = c;
             d.mode = c->modes[0];
+            for (int m = 0; m < c->count_modes; m++) {
+                if (c->modes[m].hdisplay == 1920 &&
+                    c->modes[m].vdisplay == 1080) {
+                    d.mode = c->modes[m];
+                    break;
+                }
+            }
             break;
         }
         drmModeFreeConnector(c);
