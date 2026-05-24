@@ -8,12 +8,15 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/main.cpp \
            file://safemon/src/can_reader.cpp \
            file://safemon/inc/can_reader.h \
+           file://safemon/src/drm_test.cpp \
+           file://safemon/src/framebuffer.cpp \
+           file://safemon/inc/framebuffer.h \
           "
 
 S = "${WORKDIR}/safemon"
 
 inherit cmake
 
-DEPENDS = "hiredis pkgconfig"
+DEPENDS = "hiredis pkgconfig libdrm"
 
-FILES:${PN} += "${bindir}/safemon-app"
+FILES:${PN} += "${bindir}/safemon-app ${bindir}/drm-test"
