@@ -176,6 +176,7 @@ int main() {
         EGL_BLUE_SIZE,       8,
         EGL_ALPHA_SIZE,      0,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NATIVE_VISUAL_ID, GBM_FORMAT_XRGB8888,
         EGL_NONE
     };
     EGLConfig cfg;
