@@ -142,9 +142,9 @@ int main() {
     gbm_device* gbm = gbm_create_device(render_fd);
     if (!gbm) { std::cerr << "[gbm] gbm_create_device failed\n"; return 1; }
 
-    gbm_surface* gbm_surf = gbm_surface_create(
+    gbm_surf = gbm_surface_create(
         gbm, W, H, GBM_FORMAT_XRGB8888,
-        GBM_BO_USE_SCANOUT);
+        GBM_BO_USE_RENDERING);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
 
     //  EGL
