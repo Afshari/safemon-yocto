@@ -144,7 +144,7 @@ int main() {
 
     gbm_surface* gbm_surf = gbm_surface_create(
         gbm, W, H, GBM_FORMAT_XRGB8888,
-        GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
+        GBM_BO_USE_SCANOUT);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
 
     //  EGL
