@@ -168,15 +168,14 @@ int main() {
     eglBindAPI(EGL_OPENGL_ES_API);
 
     const EGLint cfg_attrs[] = {
-        EGL_SURFACE_TYPE,    EGL_WINDOW_BIT,
+        EGL_SURFACE_TYPE,    EGL_PBUFFER_BIT,
         EGL_RED_SIZE,        8,
         EGL_GREEN_SIZE,      8,
         EGL_BLUE_SIZE,       8,
         EGL_ALPHA_SIZE,      0,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NATIVE_VISUAL_ID, GBM_FORMAT_XRGB8888,
         EGL_NONE
-    };
+    };    
     EGLConfig cfg;
     EGLint    n_cfg = 0;
     if (!eglChooseConfig(egl_dpy, cfg_attrs, &cfg, 1, &n_cfg) || n_cfg == 0) {
@@ -195,13 +194,18 @@ int main() {
         std::cerr << "[egl] eglCreateContext failed\n"; return 1;
     }
 
-    EGLSurface egl_surf = eglCreateWindowSurface(
-        egl_dpy, cfg, (EGLNativeWindowType)gbm_surf, nullptr);
+    const EGLint pbuf_attrs[] = {
+        EGL_WIDTH,  (EGLint)W,
+        EGL_HEIGHT, (EGLint)H,
+        EGL_NONE
+    };
+    EGLSurface egl_surf = eglCreatePbufferSurface(egl_dpy, cfg, pbuf_attrs);
     if (egl_surf == EGL_NO_SURFACE) {
-        std::cerr << "[egl] eglCreateWindowSurface failed, error: 0x"
-              << std::hex << eglGetError() << "\n";
+        std::cerr << "[egl] eglCreatePbufferSurface failed: 0x"
+                << std::hex << eglGetError() << "\n";
         return 1;
     }
+
 
     eglMakeCurrent(egl_dpy, egl_surf, egl_surf, ctx);
     std::cout << "[gl] " << glGetString(GL_RENDERER) << "\n";
