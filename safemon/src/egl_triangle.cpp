@@ -146,10 +146,10 @@ int main() {
         std::cerr << "[gbm] Cannot open renderD128\n"; return 1;
     }
 
-    gbm_device* gbm = gbm_create_device(render_fd);
+    gbm_device* gbm = gbm_create_device(drm.fd);
     if (!gbm) { std::cerr << "[gbm] gbm_create_device failed\n"; return 1; }
 
-    gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
+    gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_XRGB8888, GBM_BO_USE_RENDERING);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
 
     //  EGL
@@ -174,7 +174,7 @@ int main() {
         EGL_BLUE_SIZE,       8,
         EGL_ALPHA_SIZE,      0,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NATIVE_VISUAL_ID, GBM_FORMAT_ARGB8888,
+        EGL_NATIVE_VISUAL_ID, GBM_FORMAT_XRGB8888,
         EGL_NONE
     };
     EGLConfig cfg;
