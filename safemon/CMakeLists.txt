@@ -11,6 +11,11 @@ find_path(HIREDIS_INCLUDE hiredis/hiredis.h REQUIRED)
 find_library(DRM_LIB drm REQUIRED)
 find_path(DRM_INCLUDE xf86drm.h REQUIRED)
 
+find_library(EGL_LIB EGL REQUIRED)
+find_library(GLES2_LIB GLESv2 REQUIRED)
+find_library(GBM_LIB gbm REQUIRED)
+find_path(GBM_INCLUDE gbm.h REQUIRED)
+
 #  safemon-app  (CAN reader - Redis)
 add_executable(safemon-app
     src/can_reader.cpp
@@ -44,5 +49,24 @@ target_link_libraries(drm-display PRIVATE
     ${HIREDIS_LIB}
 )
 
+add_executable(egl-triangle
+    src/egl_triangle.cpp
+)
+
+target_include_directories(egl-triangle PRIVATE
+    ${GBM_INCLUDE}
+    ${DRM_INCLUDE}
+    ${DRM_INCLUDE}/drm
+)
+
+target_link_libraries(egl-triangle PRIVATE
+    ${EGL_LIB}
+    ${GLES2_LIB}
+    ${GBM_LIB}
+    ${DRM_LIB}
+)
+
 #  Install
 install(TARGETS safemon-app drm-display DESTINATION bin)
+
+install(TARGETS safemon-app drm-display egl-triangle DESTINATION bin)
