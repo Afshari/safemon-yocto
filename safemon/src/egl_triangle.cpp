@@ -196,7 +196,9 @@ int main() {
     EGLSurface egl_surf = eglCreateWindowSurface(
         egl_dpy, cfg, (EGLNativeWindowType)gbm_surf, nullptr);
     if (egl_surf == EGL_NO_SURFACE) {
-        std::cerr << "[egl] eglCreateWindowSurface failed\n"; return 1;
+        std::cerr << "[egl] eglCreateWindowSurface failed, error: 0x"
+              << std::hex << eglGetError() << "\n";
+        return 1;
     }
 
     eglMakeCurrent(egl_dpy, egl_surf, egl_surf, ctx);
