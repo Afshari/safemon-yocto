@@ -15,7 +15,10 @@ find_path(DRM_INCLUDE xf86drm.h REQUIRED)
 #     src/can_reader.cpp
 #     src/main.cpp
 # )
-add_executable(drm-test src/drm_test.cpp)
+add_executable(drm-test 
+    src/drm_test.cpp
+    src/framebuffer.cpp
+)
 
 # target_include_directories(safemon-app PRIVATE
 #     inc
