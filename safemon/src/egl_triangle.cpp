@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <vector>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
@@ -10,6 +11,8 @@
 #include <GLES2/gl2.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <drm_fourcc.h>
+
 
 // ---------------------------------------------------------------------------
 // Shaders
@@ -32,14 +35,15 @@ static const char* FRAG_SRC = R"(
     }
 )";
 
+
 // ---------------------------------------------------------------------------
-// Geometry — one triangle, interleaved pos(x,y) + color(r,g,b)
+// Geometry  one triangle, interleaved pos(x,y) + color(r,g,b)
 // ---------------------------------------------------------------------------
 static const float VERTS[] = {
 //   x      y      r     g     b
-     0.0f,  0.8f,  1.0f, 0.2f, 0.2f,   // top    — red
-    -0.7f, -0.5f,  0.2f, 1.0f, 0.2f,   // left   — green
-     0.7f, -0.5f,  0.2f, 0.2f, 1.0f,   // right  — blue
+     0.0f,  0.8f,  1.0f, 0.2f, 0.2f,   // top    red
+    -0.7f, -0.5f,  0.2f, 1.0f, 0.2f,   // left   green
+     0.7f, -0.5f,  0.2f, 0.2f, 1.0f,   // right  blue
 };
 
 // ---------------------------------------------------------------------------
@@ -79,18 +83,17 @@ static GLuint build_program() {
 }
 
 // ---------------------------------------------------------------------------
-// DRM/KMS — find connector + CRTC, present a GBM framebuffer
+// DRM/KMS
 // ---------------------------------------------------------------------------
 struct DrmState {
-    int               fd       = -1;
-    drmModeRes*       res      = nullptr;
-    drmModeConnector* conn     = nullptr;
-    uint32_t          crtc_id  = 0;
-    drmModeModeInfo   mode     = {};
+    int               fd      = -1;
+    drmModeRes*       res     = nullptr;
+    drmModeConnector* conn    = nullptr;
+    uint32_t          crtc_id = 0;
+    drmModeModeInfo   mode    = {};
 };
 
 static bool drm_open(DrmState& d) {
-    // card0 owns the display pipeline (VC4)
     d.fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
     if (d.fd < 0) { std::cerr << "[drm] Cannot open card0\n"; return false; }
 
@@ -101,7 +104,7 @@ static bool drm_open(DrmState& d) {
         drmModeConnector* c = drmModeGetConnector(d.fd, d.res->connectors[i]);
         if (c->connection == DRM_MODE_CONNECTED && c->count_modes > 0) {
             d.conn = c;
-            d.mode = c->modes[0];
+            d.mode = c->modes[0]; // fallback
             for (int m = 0; m < c->count_modes; m++) {
                 if (c->modes[m].hdisplay == 1920 &&
                     c->modes[m].vdisplay == 1080) {
@@ -133,26 +136,22 @@ static void drm_close(DrmState& d) {
 // Main
 // ---------------------------------------------------------------------------
 int main() {
-    //  DRM
+    //  DRM 
     DrmState drm;
     if (!drm_open(drm)) return 1;
 
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
 
-    //  GBM device on renderD128 (V3D render node)
-    int render_fd = open("/dev/dri/renderD128", O_RDWR | O_CLOEXEC);
-    if (render_fd < 0) {
-        std::cerr << "[gbm] Cannot open renderD128\n"; return 1;
-    }
-
+    //  GBM  use card0 fd (same as DRM) 
     gbm_device* gbm = gbm_create_device(drm.fd);
     if (!gbm) { std::cerr << "[gbm] gbm_create_device failed\n"; return 1; }
 
-    gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_XRGB8888, GBM_BO_USE_RENDERING);
+    gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_XRGB8888,
+                                GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
 
-    //  EGL
+    //  EGL 
     EGLDisplay egl_dpy = eglGetPlatformDisplay(
         EGL_PLATFORM_GBM_MESA, gbm, nullptr);
     if (egl_dpy == EGL_NO_DISPLAY) {
@@ -167,23 +166,28 @@ int main() {
 
     eglBindAPI(EGL_OPENGL_ES_API);
 
-    const EGLint cfg_attrs[] = {
-        EGL_SURFACE_TYPE,    EGL_PBUFFER_BIT,
-        EGL_RED_SIZE,        8,
-        EGL_GREEN_SIZE,      8,
-        EGL_BLUE_SIZE,       8,
-        EGL_ALPHA_SIZE,      0,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NONE
-    };    
-    EGLConfig cfg;
-    EGLint    n_cfg = 0;
-    if (!eglChooseConfig(egl_dpy, cfg_attrs, &cfg, 1, &n_cfg) || n_cfg == 0) {
-        std::cerr << "[egl] No matching config\n"; return 1;
+    // Walk all configs and pick one matching XRGB8888 + WINDOW_BIT + ES2
+    EGLint num_configs = 0;
+    eglGetConfigs(egl_dpy, nullptr, 0, &num_configs);
+    std::vector<EGLConfig> all_configs(num_configs);
+    eglGetConfigs(egl_dpy, all_configs.data(), num_configs, &num_configs);
+
+    EGLConfig cfg = nullptr;
+    for (int i = 0; i < num_configs; i++) {
+        EGLint st, rt, vid;
+        eglGetConfigAttrib(egl_dpy, all_configs[i], EGL_SURFACE_TYPE,     &st);
+        eglGetConfigAttrib(egl_dpy, all_configs[i], EGL_RENDERABLE_TYPE,  &rt);
+        eglGetConfigAttrib(egl_dpy, all_configs[i], EGL_NATIVE_VISUAL_ID, &vid);
+        if ((st  & EGL_WINDOW_BIT)     &&
+            (rt  & EGL_OPENGL_ES2_BIT) &&
+            (vid == (EGLint)GBM_FORMAT_XRGB8888)) {
+            cfg = all_configs[i];
+            std::cout << "[egl] Picked config " << i
+                      << " vid=0x" << std::hex << vid << "\n";
+            break;
+        }
     }
-    EGLint visual_id = 0;
-    eglGetConfigAttrib(egl_dpy, cfg, EGL_NATIVE_VISUAL_ID, &visual_id);
-    std::cerr << "[egl] Config native visual ID: 0x" << std::hex << visual_id << "\n";
+    if (!cfg) { std::cerr << "[egl] No matching config\n"; return 1; }
 
     const EGLint ctx_attrs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
@@ -191,26 +195,24 @@ int main() {
     };
     EGLContext ctx = eglCreateContext(egl_dpy, cfg, EGL_NO_CONTEXT, ctx_attrs);
     if (ctx == EGL_NO_CONTEXT) {
-        std::cerr << "[egl] eglCreateContext failed\n"; return 1;
-    }
-
-    const EGLint pbuf_attrs[] = {
-        EGL_WIDTH,  (EGLint)W,
-        EGL_HEIGHT, (EGLint)H,
-        EGL_NONE
-    };
-    EGLSurface egl_surf = eglCreatePbufferSurface(egl_dpy, cfg, pbuf_attrs);
-    if (egl_surf == EGL_NO_SURFACE) {
-        std::cerr << "[egl] eglCreatePbufferSurface failed: 0x"
-                << std::hex << eglGetError() << "\n";
+        std::cerr << "[egl] eglCreateContext failed: 0x"
+                  << std::hex << eglGetError() << "\n";
         return 1;
     }
 
+    EGLSurface egl_surf = eglCreateWindowSurface(
+        egl_dpy, cfg, (EGLNativeWindowType)gbm_surf, nullptr);
+    if (egl_surf == EGL_NO_SURFACE) {
+        std::cerr << "[egl] eglCreateWindowSurface failed: 0x"
+                  << std::hex << eglGetError() << "\n";
+        return 1;
+    }
 
     eglMakeCurrent(egl_dpy, egl_surf, egl_surf, ctx);
-    std::cout << "[gl] " << glGetString(GL_RENDERER) << "\n";
+    std::cout << "[gl] Renderer: " << glGetString(GL_RENDERER) << "\n";
+    std::cout << "[gl] Version:  " << glGetString(GL_VERSION)  << "\n";
 
-    //  OpenGL ES — build shader program
+    //  OpenGL ES 
     GLuint prog = build_program();
     glUseProgram(prog);
 
@@ -230,14 +232,14 @@ int main() {
     glVertexAttribPointer(loc_color, 3, GL_FLOAT, GL_FALSE,
                           5 * sizeof(float), (void*)(2 * sizeof(float)));
 
-    // Render one frame
+    //  Render 
     glViewport(0, 0, W, H);
-    glClearColor(0.07f, 0.07f, 0.10f, 1.0f);   // dark background
+    glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glDrawArrays(GL_TRIANGLES, 0, 3);
     eglSwapBuffers(egl_dpy, egl_surf);
 
-    //  GBM - DRM: lock front buffer and set CRTC
+    //  GBM - DRM 
     gbm_bo* bo = gbm_surface_lock_front_buffer(gbm_surf);
     if (!bo) { std::cerr << "[gbm] lock_front_buffer failed\n"; return 1; }
 
@@ -245,14 +247,23 @@ int main() {
     uint32_t handle = gbm_bo_get_handle(bo).u32;
     uint32_t fb_id  = 0;
 
-    drmModeAddFB(drm.fd, W, H, 24, 32, stride, handle, &fb_id);
+    uint32_t handles[4] = { handle, 0, 0, 0 };
+    uint32_t strides[4] = { stride, 0, 0, 0 };
+    uint32_t offsets[4] = { 0, 0, 0, 0 };
+
+    int ret = drmModeAddFB2(drm.fd, W, H, GBM_FORMAT_XRGB8888,
+                            handles, strides, offsets, &fb_id, 0);
+    if (ret) {
+        std::cerr << "[drm] drmModeAddFB2 failed: " << ret << "\n";
+        return 1;
+    }
     drmModeSetCrtc(drm.fd, drm.crtc_id, fb_id, 0, 0,
                    &drm.conn->connector_id, 1, &drm.mode);
 
     std::cout << "[egl-triangle] Triangle on screen. Press Enter to exit.\n";
     std::cin.get();
 
-    //  Cleanup
+    //  Cleanup 
     gbm_surface_release_buffer(gbm_surf, bo);
     glDeleteBuffers(1, &vbo);
     glDeleteProgram(prog);
@@ -262,7 +273,6 @@ int main() {
     eglTerminate(egl_dpy);
     gbm_surface_destroy(gbm_surf);
     gbm_device_destroy(gbm);
-    close(render_fd);
     drm_close(drm);
     return 0;
 }
