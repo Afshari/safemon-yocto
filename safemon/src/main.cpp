@@ -1,6 +1,8 @@
 #include <iostream>
 #include <iomanip>
 #include <csignal>
+#include <cstdio>
+#include <cstring>
 #include <hiredis/hiredis.h>
 #include "can_reader.h"
 
@@ -46,11 +48,17 @@ int main() {
         }
         std::cout << std::endl;
 
-        // Store in Redis
-        redisCommand(ctx, "LPUSH safemon:can:frames %x#%02x%02x%02x%02x",
-            frame.id,
-            frame.data[0], frame.data[1],
-            frame.data[2], frame.data[3]);
+        // Build frame string
+        char buf[64];
+        std::snprintf(buf, sizeof(buf), "%03X#", frame.id);
+        for (int i = 0; i < frame.len; i++) {
+            char byte[3];
+            std::snprintf(byte, sizeof(byte), "%02X", frame.data[i]);
+            std::strncat(buf, byte, sizeof(buf) - strlen(buf) - 1);
+        }
+
+        // Push as a single string
+        redisCommand(ctx, "LPUSH safemon:can:frames %s", buf);
     }
 
     std::cout << "Shutting down..." << std::endl;
