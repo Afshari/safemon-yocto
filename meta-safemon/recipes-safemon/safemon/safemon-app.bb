@@ -18,6 +18,6 @@ S = "${WORKDIR}/safemon"
 
 inherit cmake
 
-DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl libgbm mesa"
+DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa"
 
 FILES:${PN} += "${bindir}/safemon-app ${bindir}/drm-display ${bindir}/egl-triangle"
