@@ -6,7 +6,6 @@
 
 #include <gbm.h>
 #include <EGL/egl.h>
-#include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -148,10 +147,10 @@ int main() {
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
 
     //  EGL
-    EGLDisplay egl_dpy = eglGetPlatformDisplayEXT(
+    EGLDisplay egl_dpy = eglGetPlatformDisplay(
         EGL_PLATFORM_GBM_MESA, gbm, nullptr);
     if (egl_dpy == EGL_NO_DISPLAY) {
-        std::cerr << "[egl] eglGetPlatformDisplayEXT failed\n"; return 1;
+        std::cerr << "[egl] eglGetPlatformDisplay failed\n"; return 1;
     }
 
     EGLint major, minor;
