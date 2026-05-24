@@ -10,7 +10,7 @@ int main() {
     // Open DRM device
     int fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
     if (fd < 0) {
-        std::cerr << "Failed to open /dev/dri/card0" << std::endl;
+        std::cerr << "Failed to open /dev/dri/card1" << std::endl;
         return 1;
     }
     std::cout << "Opened DRM device" << std::endl;
