@@ -8,7 +8,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/main.cpp \
            file://safemon/src/can_reader.cpp \
            file://safemon/inc/can_reader.h \
-           file://safemon/src/drm_test.cpp \
+           file://safemon/src/drm_display.cpp \
            file://safemon/src/framebuffer.cpp \
            file://safemon/inc/framebuffer.h \
           "
