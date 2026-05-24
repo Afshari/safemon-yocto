@@ -24,6 +24,7 @@ add_executable(drm-test src/drm_test.cpp)
 target_include_directories(drm-test PRIVATE
     inc
     ${DRM_INCLUDE}
+    ${DRM_INCLUDE}/drm
 )
 
 # target_link_libraries(safemon-app PRIVATE
