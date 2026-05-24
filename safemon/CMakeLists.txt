@@ -9,7 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # DRM test
 find_library(DRM_LIB drm REQUIRED)
-find_path(DRM_INCLUDE drm/xf86drm.h REQUIRED)
+find_path(DRM_INCLUDE xf86drm.h REQUIRED)
 
 # add_executable(safemon-app
 #     src/can_reader.cpp
@@ -24,7 +24,6 @@ add_executable(drm-test src/drm_test.cpp)
 target_include_directories(drm-test PRIVATE
     inc
     ${DRM_INCLUDE}
-    ${DRM_INCLUDE}/drm
 )
 
 # target_link_libraries(safemon-app PRIVATE
