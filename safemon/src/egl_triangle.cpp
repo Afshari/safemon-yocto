@@ -149,9 +149,7 @@ int main() {
     gbm_device* gbm = gbm_create_device(render_fd);
     if (!gbm) { std::cerr << "[gbm] gbm_create_device failed\n"; return 1; }
 
-    gbm_surface* gbm_surf = gbm_surface_create(
-        gbm, W, H, GBM_FORMAT_XRGB8888,
-        GBM_BO_USE_RENDERING);
+    gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_ARGB8888, GBM_BO_USE_RENDERING);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
 
     //  EGL
@@ -176,7 +174,7 @@ int main() {
         EGL_BLUE_SIZE,       8,
         EGL_ALPHA_SIZE,      0,
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        EGL_NATIVE_VISUAL_ID, GBM_FORMAT_XRGB8888,
+        EGL_NATIVE_VISUAL_ID, GBM_FORMAT_ARGB8888,
         EGL_NONE
     };
     EGLConfig cfg;
@@ -184,6 +182,9 @@ int main() {
     if (!eglChooseConfig(egl_dpy, cfg_attrs, &cfg, 1, &n_cfg) || n_cfg == 0) {
         std::cerr << "[egl] No matching config\n"; return 1;
     }
+    EGLint visual_id = 0;
+    eglGetConfigAttrib(egl_dpy, cfg, EGL_NATIVE_VISUAL_ID, &visual_id);
+    std::cerr << "[egl] Config native visual ID: 0x" << std::hex << visual_id << "\n";
 
     const EGLint ctx_attrs[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
