@@ -306,13 +306,10 @@ int main() {
         fps_last = fps_now;
 
         if (fps_accum >= 1.0) {
-            std::cout << "[fps] " << fps_count << " fps\n";
+            std::cout << "[fps] " << std::dec << fps_count << " fps\n";
             fps_count = 0;
             fps_accum = 0.0;
         }
-        // Temporary exit condition - press Enter
-        // (will be replaced by keyboard input later)
-        // running = false;
     }
     std::cin.get();
 
