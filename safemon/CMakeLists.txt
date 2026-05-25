@@ -67,6 +67,4 @@ target_link_libraries(egl-triangle PRIVATE
 )
 
 #  Install
-install(TARGETS safemon-app drm-display DESTINATION bin)
-
 install(TARGETS safemon-app drm-display egl-triangle DESTINATION bin)
