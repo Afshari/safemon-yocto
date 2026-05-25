@@ -150,6 +150,8 @@ int main() {
     gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_XRGB8888,
                                 GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
+    gbm_bo* prev_bo    = nullptr;
+    uint32_t prev_fb_id = 0;
 
     //  EGL 
     EGLDisplay egl_dpy = eglGetPlatformDisplay(
@@ -232,39 +234,55 @@ int main() {
     glVertexAttribPointer(loc_color, 3, GL_FLOAT, GL_FALSE,
                           5 * sizeof(float), (void*)(2 * sizeof(float)));
 
-    //  Render 
+    // Render loop
+    bool running = true;
     glViewport(0, 0, W, H);
-    glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    eglSwapBuffers(egl_dpy, egl_surf);
 
-    //  GBM - DRM 
-    gbm_bo* bo = gbm_surface_lock_front_buffer(gbm_surf);
-    if (!bo) { std::cerr << "[gbm] lock_front_buffer failed\n"; return 1; }
+    while (running) {
+        // Draw
+        glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        eglSwapBuffers(egl_dpy, egl_surf);
 
-    uint32_t stride = gbm_bo_get_stride(bo);
-    uint32_t handle = gbm_bo_get_handle(bo).u32;
-    uint32_t fb_id  = 0;
+        // Lock the buffer the GPU just finished rendering into
+        gbm_bo* bo = gbm_surface_lock_front_buffer(gbm_surf);
+        if (!bo) { std::cerr << "[gbm] lock_front_buffer failed\n"; break; }
 
-    uint32_t handles[4] = { handle, 0, 0, 0 };
-    uint32_t strides[4] = { stride, 0, 0, 0 };
-    uint32_t offsets[4] = { 0, 0, 0, 0 };
+        // Register it with DRM
+        uint32_t fb_id  = 0;
+        uint32_t stride = gbm_bo_get_stride(bo);
+        uint32_t handle = gbm_bo_get_handle(bo).u32;
+        uint32_t handles[4] = { handle, 0, 0, 0 };
+        uint32_t strides[4] = { stride, 0, 0, 0 };
+        uint32_t offsets[4] = { 0, 0, 0, 0 };
+        drmModeAddFB2(drm.fd, W, H, GBM_FORMAT_XRGB8888,
+                    handles, strides, offsets, &fb_id, 0);
 
-    int ret = drmModeAddFB2(drm.fd, W, H, GBM_FORMAT_XRGB8888,
-                            handles, strides, offsets, &fb_id, 0);
-    if (ret) {
-        std::cerr << "[drm] drmModeAddFB2 failed: " << ret << "\n";
-        return 1;
+        // Put it on screen
+        drmModeSetCrtc(drm.fd, drm.crtc_id, fb_id, 0, 0,
+                    &drm.conn->connector_id, 1, &drm.mode);
+
+        // Now safe to release the previous frame's buffer
+        if (prev_bo) {
+            drmModeRmFB(drm.fd, prev_fb_id);
+            gbm_surface_release_buffer(gbm_surf, prev_bo);
+        }
+
+        prev_bo    = bo;
+        prev_fb_id = fb_id;
+
+        // Temporary exit condition - press Enter
+        // (will be replaced by keyboard input later)
+        running = false;
     }
-    drmModeSetCrtc(drm.fd, drm.crtc_id, fb_id, 0, 0,
-                   &drm.conn->connector_id, 1, &drm.mode);
-
-    std::cout << "[egl-triangle] Triangle on screen. Press Enter to exit.\n";
     std::cin.get();
 
     //  Cleanup 
-    gbm_surface_release_buffer(gbm_surf, bo);
+    if (prev_bo) {
+        drmModeRmFB(drm.fd, prev_fb_id);
+        gbm_surface_release_buffer(gbm_surf, prev_bo);
+    }
     glDeleteBuffers(1, &vbo);
     glDeleteProgram(prog);
     eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
