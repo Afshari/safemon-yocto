@@ -139,6 +139,7 @@ int main() {
     //  DRM 
     DrmState drm;
     if (!drm_open(drm)) return 1;
+    std::cout << "[egl-triangle] version: double-buffered render loop\n";
 
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
