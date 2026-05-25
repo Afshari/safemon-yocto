@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
-
+#include <time.h>
 #include <gbm.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -235,6 +235,12 @@ int main() {
     glVertexAttribPointer(loc_color, 3, GL_FLOAT, GL_FALSE,
                           5 * sizeof(float), (void*)(2 * sizeof(float)));
 
+    // FPS counter
+    int        fps_count  = 0;
+    double     fps_accum  = 0.0;
+    struct timespec fps_last;
+    clock_gettime(CLOCK_MONOTONIC, &fps_last);
+
     // Render loop
     bool running = true;
     glViewport(0, 0, W, H);
@@ -273,9 +279,23 @@ int main() {
         prev_bo    = bo;
         prev_fb_id = fb_id;
 
+        // FPS measurement
+        struct timespec fps_now;
+        clock_gettime(CLOCK_MONOTONIC, &fps_now);
+        double elapsed = (fps_now.tv_sec  - fps_last.tv_sec) +
+                        (fps_now.tv_nsec - fps_last.tv_nsec) * 1e-9;
+        fps_accum += elapsed;
+        fps_count++;
+        fps_last = fps_now;
+
+        if (fps_accum >= 1.0) {
+            std::cout << "[fps] " << fps_count << " fps\n";
+            fps_count = 0;
+            fps_accum = 0.0;
+        }
         // Temporary exit condition - press Enter
         // (will be replaced by keyboard input later)
-        running = false;
+        // running = false;
     }
     std::cin.get();
 
