@@ -12,7 +12,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <drm_fourcc.h>
-
+#include <linux/input.h>
 
 // ---------------------------------------------------------------------------
 // Shaders
@@ -241,6 +241,11 @@ int main() {
     struct timespec fps_last;
     clock_gettime(CLOCK_MONOTONIC, &fps_last);
 
+    // Open keyboard input (non-blocking)
+    int kbd_fd = open("/dev/input/event4", O_RDONLY | O_NONBLOCK);
+    if (kbd_fd < 0)
+        std::cerr << "[input] Could not open /dev/input/event0 - no keyboard input\n";
+
     // Render loop
     bool running = true;
     glViewport(0, 0, W, H);
@@ -279,6 +284,18 @@ int main() {
         prev_bo    = bo;
         prev_fb_id = fb_id;
 
+        // Poll keyboard
+        if (kbd_fd >= 0) {
+            struct input_event ev;
+            while (read(kbd_fd, &ev, sizeof(ev)) == sizeof(ev)) {
+                if (ev.type == EV_KEY &&
+                    ev.code == KEY_ESC &&
+                    ev.value == 1) {   // 1 = key down
+                    running = false;
+                }
+            }
+        }
+
         // FPS measurement
         struct timespec fps_now;
         clock_gettime(CLOCK_MONOTONIC, &fps_now);
@@ -304,6 +321,7 @@ int main() {
         drmModeRmFB(drm.fd, prev_fb_id);
         gbm_surface_release_buffer(gbm_surf, prev_bo);
     }
+    if (kbd_fd >= 0) close(kbd_fd);
     glDeleteBuffers(1, &vbo);
     glDeleteProgram(prog);
     eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
