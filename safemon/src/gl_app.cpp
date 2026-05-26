@@ -1,5 +1,9 @@
 #include "gl_app.h"
-
+#include <dirent.h>
+#include <linux/input.h>
+#include <cstring>
+#include <fcntl.h>
+#include <unistd.h>
 
 // ---------------------------------------------------------------------------
 // Shaders
@@ -81,4 +85,50 @@ GLuint build_program() {
 void set_rotation(GLuint prog, float angle) {
     GLint loc = glGetUniformLocation(prog, "u_angle");
     glUniform1f(loc, angle);
+}
+
+
+int open_keyboard() {
+    DIR* dir = opendir("/dev/input");
+    if (!dir) return -1;
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != nullptr) {
+        // only process eventX files
+        if (strncmp(entry->d_name, "event", 5) != 0) continue;
+
+        char path[64];
+        snprintf(path, sizeof(path), "/dev/input/%s", entry->d_name);
+
+        int fd = open(path, O_RDONLY | O_NONBLOCK);
+        if (fd < 0) continue;
+
+        // check if it has EV_KEY capability
+        uint8_t evbits[EV_MAX / 8 + 1] = {};
+        ioctl(fd, EVIOCGBIT(0, sizeof(evbits)), evbits);
+        if (!(evbits[EV_KEY / 8] & (1 << (EV_KEY % 8)))) {
+            close(fd);
+            continue;
+        }
+
+        // check for multiple keys that only a real keyboard has
+        uint8_t keybits[KEY_MAX / 8 + 1] = {};
+        ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits);
+
+        bool has_esc   = keybits[KEY_ESC   / 8] & (1 << (KEY_ESC   % 8));
+        bool has_a     = keybits[KEY_A     / 8] & (1 << (KEY_A     % 8));
+        bool has_space = keybits[KEY_SPACE / 8] & (1 << (KEY_SPACE % 8));
+
+        if (has_esc && has_a && has_space) {
+            std::cout << "[input] Keyboard found: /dev/input/"
+                    << entry->d_name << "\n";
+            closedir(dir);
+            return fd;
+        }
+        
+        close(fd);
+    }
+
+    closedir(dir);
+    return -1;
 }

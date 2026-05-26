@@ -57,10 +57,10 @@ int main() {
     struct timespec fps_last;
     clock_gettime(CLOCK_MONOTONIC, &fps_last);
 
-    // Open keyboard input (non-blocking)
-    int kbd_fd = open("/dev/input/event4", O_RDONLY | O_NONBLOCK);
+    // Open keyboard input (non-blocking) 
+    int kbd_fd = open_keyboard();
     if (kbd_fd < 0)
-        std::cerr << "[input] Could not open /dev/input/event0 - no keyboard input\n";
+        std::cerr << "[input] No keyboard found\n";
 
     float angle = 0.0f;
     // Render loop
@@ -131,7 +131,6 @@ int main() {
             fps_accum = 0.0;
         }
     }
-    std::cin.get();
 
     //  Cleanup 
     if (prev_bo) {
