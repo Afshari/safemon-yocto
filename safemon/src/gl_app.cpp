@@ -33,6 +33,27 @@ static const char* FRAG_SRC = R"(
     }
 )";
 
+// ---------------------------------------------------------------------------
+static const char* RECT_VERT_SRC = R"(
+    attribute vec2 a_pos;
+    uniform vec2 u_pos;
+    uniform vec2 u_size;
+    uniform vec2 u_screen;
+    void main() {
+        vec2 pixel = u_pos + a_pos * u_size;
+        vec2 ndc = (pixel / u_screen) * 2.0 - 1.0;
+        ndc.y = -ndc.y;
+        gl_Position = vec4(ndc, 0.0, 1.0);
+    }
+)";
+
+static const char* RECT_FRAG_SRC = R"(
+    precision mediump float;
+    uniform vec3 u_color;
+    void main() {
+        gl_FragColor = vec4(u_color, 1.0);
+    }
+)";
 
 // ---------------------------------------------------------------------------
 // Geometry  one triangle, interleaved pos(x,y) + color(r,g,b)
@@ -82,11 +103,55 @@ GLuint build_program() {
     return prog;
 }
 
+// ---------------------------------------------------------------------------
+GLuint build_rect_program() {
+    GLuint vert = compile_shader(GL_VERTEX_SHADER,   RECT_VERT_SRC);
+    GLuint frag = compile_shader(GL_FRAGMENT_SHADER, RECT_FRAG_SRC);
+    GLuint prog = glCreateProgram();
+    glAttachShader(prog, vert);
+    glAttachShader(prog, frag);
+    glLinkProgram(prog);
+    glDeleteShader(vert);
+    glDeleteShader(frag);
+    return prog;
+}
+// ---------------------------------------------------------------------------
+void draw_rect(GLuint prog, float x, float y, float w, float h,
+               float r, float g, float b,
+               float screen_w, float screen_h) {
+    // unit quad — two triangles
+    static const float QUAD[] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+    };
+
+    glUseProgram(prog);
+
+    GLint loc_pos    = glGetAttribLocation(prog,  "a_pos");
+    GLint loc_upos   = glGetUniformLocation(prog, "u_pos");
+    GLint loc_usize  = glGetUniformLocation(prog, "u_size");
+    GLint loc_screen = glGetUniformLocation(prog, "u_screen");
+    GLint loc_color  = glGetUniformLocation(prog, "u_color");
+
+    glUniform2f(loc_upos,   x, y);
+    glUniform2f(loc_usize,  w, h);
+    glUniform2f(loc_screen, screen_w, screen_h);
+    glUniform3f(loc_color,  r, g, b);
+
+    glEnableVertexAttribArray(loc_pos);
+    glVertexAttribPointer(loc_pos, 2, GL_FLOAT, GL_FALSE, 0, QUAD);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glDisableVertexAttribArray(loc_pos);
+}
+
 void set_rotation(GLuint prog, float angle) {
     GLint loc = glGetUniformLocation(prog, "u_angle");
     glUniform1f(loc, angle);
 }
-
 
 int open_keyboard() {
     DIR* dir = opendir("/dev/input");

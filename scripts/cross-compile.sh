@@ -43,6 +43,15 @@ case $TARGET in
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
+  gl-display)
+    aarch64-poky-linux-g++ $BASE_FLAGS \
+      -ldrm -lhiredis \
+      -lEGL -lGLESv2 -lgbm -ldrm \
+      safemon/src/gl_app.cpp \
+      safemon/src/gl_display.cpp \
+      -I safemon/inc \
+      -o $REPO_ROOT/out/$TARGET
+    ;;
   safemon-app)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lhiredis \
