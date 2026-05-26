@@ -16,6 +16,8 @@ meta-openembedded/
 # Wi-Fi credentials - NEVER commit
 meta-safemon/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf
 
+# cross-compile
+out/
 
 # Python
 __pycache__/

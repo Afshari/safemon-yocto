@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
-
+#include <time.h>
 #include <gbm.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -12,7 +12,7 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <drm_fourcc.h>
-
+#include <linux/input.h>
 
 // ---------------------------------------------------------------------------
 // Shaders
@@ -139,6 +139,7 @@ int main() {
     //  DRM 
     DrmState drm;
     if (!drm_open(drm)) return 1;
+    std::cout << "[egl-triangle] version: double-buffered render loop\n";
 
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
@@ -150,6 +151,8 @@ int main() {
     gbm_surface* gbm_surf = gbm_surface_create(gbm, W, H, GBM_FORMAT_XRGB8888,
                                 GBM_BO_USE_SCANOUT | GBM_BO_USE_RENDERING);
     if (!gbm_surf) { std::cerr << "[gbm] Surface creation failed\n"; return 1; }
+    gbm_bo* prev_bo    = nullptr;
+    uint32_t prev_fb_id = 0;
 
     //  EGL 
     EGLDisplay egl_dpy = eglGetPlatformDisplay(
@@ -232,39 +235,90 @@ int main() {
     glVertexAttribPointer(loc_color, 3, GL_FLOAT, GL_FALSE,
                           5 * sizeof(float), (void*)(2 * sizeof(float)));
 
-    //  Render 
+    // FPS counter
+    int        fps_count  = 0;
+    double     fps_accum  = 0.0;
+    struct timespec fps_last;
+    clock_gettime(CLOCK_MONOTONIC, &fps_last);
+
+    // Open keyboard input (non-blocking)
+    int kbd_fd = open("/dev/input/event4", O_RDONLY | O_NONBLOCK);
+    if (kbd_fd < 0)
+        std::cerr << "[input] Could not open /dev/input/event0 - no keyboard input\n";
+
+    // Render loop
+    bool running = true;
     glViewport(0, 0, W, H);
-    glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    eglSwapBuffers(egl_dpy, egl_surf);
 
-    //  GBM - DRM 
-    gbm_bo* bo = gbm_surface_lock_front_buffer(gbm_surf);
-    if (!bo) { std::cerr << "[gbm] lock_front_buffer failed\n"; return 1; }
+    while (running) {
+        // Draw
+        glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        eglSwapBuffers(egl_dpy, egl_surf);
 
-    uint32_t stride = gbm_bo_get_stride(bo);
-    uint32_t handle = gbm_bo_get_handle(bo).u32;
-    uint32_t fb_id  = 0;
+        // Lock the buffer the GPU just finished rendering into
+        gbm_bo* bo = gbm_surface_lock_front_buffer(gbm_surf);
+        if (!bo) { std::cerr << "[gbm] lock_front_buffer failed\n"; break; }
 
-    uint32_t handles[4] = { handle, 0, 0, 0 };
-    uint32_t strides[4] = { stride, 0, 0, 0 };
-    uint32_t offsets[4] = { 0, 0, 0, 0 };
+        // Register it with DRM
+        uint32_t fb_id  = 0;
+        uint32_t stride = gbm_bo_get_stride(bo);
+        uint32_t handle = gbm_bo_get_handle(bo).u32;
+        uint32_t handles[4] = { handle, 0, 0, 0 };
+        uint32_t strides[4] = { stride, 0, 0, 0 };
+        uint32_t offsets[4] = { 0, 0, 0, 0 };
+        drmModeAddFB2(drm.fd, W, H, GBM_FORMAT_XRGB8888,
+                    handles, strides, offsets, &fb_id, 0);
 
-    int ret = drmModeAddFB2(drm.fd, W, H, GBM_FORMAT_XRGB8888,
-                            handles, strides, offsets, &fb_id, 0);
-    if (ret) {
-        std::cerr << "[drm] drmModeAddFB2 failed: " << ret << "\n";
-        return 1;
+        // Put it on screen
+        drmModeSetCrtc(drm.fd, drm.crtc_id, fb_id, 0, 0,
+                    &drm.conn->connector_id, 1, &drm.mode);
+
+        // Now safe to release the previous frame's buffer
+        if (prev_bo) {
+            drmModeRmFB(drm.fd, prev_fb_id);
+            gbm_surface_release_buffer(gbm_surf, prev_bo);
+        }
+
+        prev_bo    = bo;
+        prev_fb_id = fb_id;
+
+        // Poll keyboard
+        if (kbd_fd >= 0) {
+            struct input_event ev;
+            while (read(kbd_fd, &ev, sizeof(ev)) == sizeof(ev)) {
+                if (ev.type == EV_KEY &&
+                    ev.code == KEY_ESC &&
+                    ev.value == 1) {   // 1 = key down
+                    running = false;
+                }
+            }
+        }
+
+        // FPS measurement
+        struct timespec fps_now;
+        clock_gettime(CLOCK_MONOTONIC, &fps_now);
+        double elapsed = (fps_now.tv_sec  - fps_last.tv_sec) +
+                        (fps_now.tv_nsec - fps_last.tv_nsec) * 1e-9;
+        fps_accum += elapsed;
+        fps_count++;
+        fps_last = fps_now;
+
+        if (fps_accum >= 1.0) {
+            std::cout << "[fps] " << std::dec << fps_count << " fps\n";
+            fps_count = 0;
+            fps_accum = 0.0;
+        }
     }
-    drmModeSetCrtc(drm.fd, drm.crtc_id, fb_id, 0, 0,
-                   &drm.conn->connector_id, 1, &drm.mode);
-
-    std::cout << "[egl-triangle] Triangle on screen. Press Enter to exit.\n";
     std::cin.get();
 
     //  Cleanup 
-    gbm_surface_release_buffer(gbm_surf, bo);
+    if (prev_bo) {
+        drmModeRmFB(drm.fd, prev_fb_id);
+        gbm_surface_release_buffer(gbm_surf, prev_bo);
+    }
+    if (kbd_fd >= 0) close(kbd_fd);
     glDeleteBuffers(1, &vbo);
     glDeleteProgram(prog);
     eglMakeCurrent(egl_dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
