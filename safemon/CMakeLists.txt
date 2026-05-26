@@ -50,10 +50,12 @@ target_link_libraries(drm-display PRIVATE
 )
 
 add_executable(egl-triangle
+    src/gl_app.cpp
     src/egl_triangle.cpp
 )
 
 target_include_directories(egl-triangle PRIVATE
+    inc
     ${GBM_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm

@@ -19,7 +19,7 @@ static void signal_handler(int) {
 }
 
 // ---------------------------------------------------------------------------
-// DRM helpers — same init sequence as drm_test, extracted into functions
+// DRM helpers
 // ---------------------------------------------------------------------------
 struct DrmContext {
     int         fd      = -1;

@@ -30,7 +30,9 @@ case $TARGET in
   egl-triangle)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lgbm -ldrm \
+      safemon/src/gl_app.cpp \
       safemon/src/egl_triangle.cpp \
+      -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
   drm-display)
