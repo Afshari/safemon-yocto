@@ -15,3 +15,11 @@ GLuint build_rect_program();
 void draw_rect(GLuint prog, float x, float y, float w, float h,
                float r, float g, float b,
                float screen_w, float screen_h);
+
+GLuint build_font_texture();
+GLuint build_text_program();
+void draw_text_gl(GLuint text_prog, GLuint font_tex,
+                  float x, float y, const char* text,
+                  float r, float g, float b,
+                  float scale,
+                  float screen_w, float screen_h);

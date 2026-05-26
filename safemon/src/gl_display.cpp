@@ -39,6 +39,9 @@ int main() {
 
     GLuint rect_prog = build_rect_program();
 
+    GLuint text_prog = build_text_program();
+    GLuint font_tex  = build_font_texture();    
+
     while (g_running) {
         // Clear to dark background
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
@@ -52,6 +55,11 @@ int main() {
         draw_rect(rect_prog, 360, 90, 280, 70, 0.0f, 1.0f, 0.0f, W, H);
         // footer - gray
         draw_rect(rect_prog, 0, H - 40, W, 40, 0.27f, 0.27f, 0.27f, W, H);
+        
+        draw_text_gl(text_prog, font_tex,
+             20, 18, "SAFEMON STATUS PANEL",
+             1.0f, 1.0f, 1.0f, 3.0f, W, H);
+
         eglSwapBuffers(egl.dpy, egl.surf);
 
         // GBM -> DRM
@@ -85,6 +93,8 @@ int main() {
         gbm_surface_release_buffer(egl.gbm_surf, prev_bo);
     }
     glDeleteProgram(rect_prog);
+    glDeleteProgram(text_prog);
+    glDeleteTextures(1, &font_tex);
     egl_cleanup(egl);
     drm_close(drm);
     return 0;
