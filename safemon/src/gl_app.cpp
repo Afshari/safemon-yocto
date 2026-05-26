@@ -8,8 +8,15 @@ static const char* VERT_SRC = R"(
     attribute vec2 a_pos;
     attribute vec3 a_color;
     varying vec3 v_color;
+    uniform float u_angle;
     void main() {
-        gl_Position = vec4(a_pos, 0.0, 1.0);
+        float c = cos(u_angle);
+        float s = sin(u_angle);
+        vec2 rotated = vec2(
+            a_pos.x * c - a_pos.y * s,
+            a_pos.x * s + a_pos.y * c
+        );
+        gl_Position = vec4(rotated, 0.0, 1.0);
         v_color = a_color;
     }
 )";
@@ -69,4 +76,9 @@ GLuint build_program() {
     glDeleteShader(vert);
     glDeleteShader(frag);
     return prog;
+}
+
+void set_rotation(GLuint prog, float angle) {
+    GLint loc = glGetUniformLocation(prog, "u_angle");
+    glUniform1f(loc, angle);
 }

@@ -8,3 +8,4 @@ extern const int VERTS_SIZE;
 
 GLuint compile_shader(GLenum type, const char* src);
 GLuint build_program();
+void set_rotation(GLuint prog, float angle);

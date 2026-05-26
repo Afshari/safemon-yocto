@@ -62,11 +62,15 @@ int main() {
     if (kbd_fd < 0)
         std::cerr << "[input] Could not open /dev/input/event0 - no keyboard input\n";
 
+    float angle = 0.0f;
     // Render loop
     bool running = true;
     glViewport(0, 0, W, H);
 
     while (running) {
+
+        angle += 0.016f;   // roughly 1 degree per frame at 60fps
+        set_rotation(prog, angle);
         // Draw
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
