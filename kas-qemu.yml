@@ -1,0 +1,28 @@
+header:
+  version: 18
+
+machine: qemuarm64
+distro: safemon-qemu
+target: core-image-base
+
+repos:
+  poky:
+    url: https://git.yoctoproject.org/poky.git
+    refspec: scarthgap
+    layers:
+      meta:
+      meta-poky:
+      meta-yocto-bsp:
+
+  meta-openembedded:
+    url: https://github.com/openembedded/meta-openembedded.git
+    refspec: scarthgap
+    layers:
+      meta-oe:
+      meta-python:
+      meta-networking:
+
+  meta-safemon:
+    path: .
+    layers:
+      meta-safemon:
