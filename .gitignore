@@ -1,5 +1,6 @@
 # Yocto build directory - never commit this
 build-rpi4/
+build-qemu/
 build/
 
 # Yocto downloads cache

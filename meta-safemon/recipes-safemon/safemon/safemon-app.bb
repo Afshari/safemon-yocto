@@ -7,11 +7,15 @@ FILESEXTRAPATHS:prepend := "${TOPDIR}/../:"
 SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/main.cpp \
            file://safemon/src/can_reader.cpp \
-           file://safemon/inc/can_reader.h \
            file://safemon/src/drm_display.cpp \
            file://safemon/src/framebuffer.cpp \
-           file://safemon/inc/framebuffer.h \
            file://safemon/src/egl_triangle.cpp \
+           file://safemon/src/gl_app.cpp \
+           file://safemon/inc/can_reader.h \
+           file://safemon/inc/drm_helper.h \
+           file://safemon/inc/egl_helper.h \
+           file://safemon/inc/framebuffer.h \
+           file://safemon/inc/gl_app.h \
           "
 
 S = "${WORKDIR}/safemon"
