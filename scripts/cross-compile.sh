@@ -30,6 +30,8 @@ case $TARGET in
   egl-triangle)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lgbm -ldrm \
+      safemon/src/drm_helper.cpp \
+      safemon/src/egl_helper.cpp \
       safemon/src/gl_app.cpp \
       safemon/src/egl_triangle.cpp \
       -I safemon/inc \
@@ -46,6 +48,8 @@ case $TARGET in
   gl-display)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lgbm -ldrm -lhiredis \
+      safemon/src/drm_helper.cpp \
+      safemon/src/egl_helper.cpp \
       safemon/src/gl_display.cpp \
       safemon/src/gl_app.cpp \
       -I safemon/inc \

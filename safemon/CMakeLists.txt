@@ -53,6 +53,8 @@ target_link_libraries(drm-display PRIVATE
 add_executable(egl-triangle
     src/gl_app.cpp
     src/egl_triangle.cpp
+    src/drm_helper.cpp
+    src/egl_helper.cpp
 )
 
 target_include_directories(egl-triangle PRIVATE
@@ -73,6 +75,8 @@ target_link_libraries(egl-triangle PRIVATE
 add_executable(gl-display
     src/gl_display.cpp
     src/gl_app.cpp
+    src/drm_helper.cpp
+    src/egl_helper.cpp
 )
 
 target_include_directories(gl-display PRIVATE
