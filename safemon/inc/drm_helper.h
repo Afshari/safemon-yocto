@@ -17,8 +17,8 @@ struct DrmState {
 };
 
 static bool drm_open(DrmState& d) {
-    d.fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
-    if (d.fd < 0) { std::cerr << "[drm] Cannot open card0\n"; return false; }
+    d.fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
+    if (d.fd < 0) { std::cerr << "[drm] Cannot open card1\n"; return false; }
 
     d.res = drmModeGetResources(d.fd);
     if (!d.res) { std::cerr << "[drm] No resources\n"; return false; }
@@ -29,8 +29,10 @@ static bool drm_open(DrmState& d) {
             d.conn = c;
             d.mode = c->modes[0]; // fallback
             for (int m = 0; m < c->count_modes; m++) {
-                if (c->modes[m].hdisplay == 1920 &&
-                    c->modes[m].vdisplay == 1080) {
+                if ((c->modes[m].hdisplay == 800  &&
+                    c->modes[m].vdisplay == 480) ||
+                    (c->modes[m].hdisplay == 1920 &&
+                    c->modes[m].vdisplay == 1080)) {
                     d.mode = c->modes[m];
                     break;
                 }

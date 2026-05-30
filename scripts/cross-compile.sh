@@ -3,7 +3,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <target>"
-    echo "  targets: egl-triangle, drm-display, safemon-app"
+    echo "  targets: egl-triangle, drm-display, safemon-app, gl-display"
     exit 1
 fi
 
@@ -11,9 +11,9 @@ TARGET=$1
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p $REPO_ROOT/out
 
-export PATH="/home/yocto/safemon-rpi4-yocto/build/tmp/work/cortexa72-poky-linux/safemon-app/1.0/recipe-sysroot-native/usr/bin/aarch64-poky-linux:$PATH"
+export PATH="/home/ubuntu/safemon-yocto/build/tmp/work/cortexa72-poky-linux/safemon-app/1.0/recipe-sysroot-native/usr/bin/aarch64-poky-linux:$PATH"
 
-SYSROOT=/home/yocto/safemon-rpi4-yocto/build/tmp/work/cortexa72-poky-linux/safemon-app/1.0/recipe-sysroot
+SYSROOT=/home/ubuntu/safemon-yocto/build/tmp/work/cortexa72-poky-linux/safemon-app/1.0/recipe-sysroot
 
 BASE_FLAGS="\
   -mcpu=cortex-a72+crc \
@@ -45,10 +45,16 @@ case $TARGET in
     ;;
   gl-display)
     aarch64-poky-linux-g++ $BASE_FLAGS \
+<<<<<<< Updated upstream
       -ldrm -lhiredis \
       -lEGL -lGLESv2 -lgbm -ldrm \
       safemon/src/gl_app.cpp \
       safemon/src/gl_display.cpp \
+=======
+      -lEGL -lGLESv2 -lgbm -ldrm -lhiredis \
+      safemon/src/gl_display.cpp \
+      safemon/src/gl_app.cpp \
+>>>>>>> Stashed changes
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
