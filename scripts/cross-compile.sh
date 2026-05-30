@@ -45,16 +45,9 @@ case $TARGET in
     ;;
   gl-display)
     aarch64-poky-linux-g++ $BASE_FLAGS \
-<<<<<<< Updated upstream
-      -ldrm -lhiredis \
-      -lEGL -lGLESv2 -lgbm -ldrm \
-      safemon/src/gl_app.cpp \
-      safemon/src/gl_display.cpp \
-=======
       -lEGL -lGLESv2 -lgbm -ldrm -lhiredis \
       safemon/src/gl_display.cpp \
       safemon/src/gl_app.cpp \
->>>>>>> Stashed changes
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;

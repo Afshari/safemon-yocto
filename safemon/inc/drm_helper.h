@@ -26,21 +26,22 @@ static bool drm_open(DrmState& d) {
     for (int i = 0; i < d.res->count_connectors; i++) {
         drmModeConnector* c = drmModeGetConnector(d.fd, d.res->connectors[i]);
         if (c->connection == DRM_MODE_CONNECTED && c->count_modes > 0) {
-            d.conn = c;
-            d.mode = c->modes[0]; // fallback
-            for (int m = 0; m < c->count_modes; m++) {
-                if ((c->modes[m].hdisplay == 800  &&
-                    c->modes[m].vdisplay == 480) ||
-                    (c->modes[m].hdisplay == 1920 &&
-                    c->modes[m].vdisplay == 1080)) {
-                    d.mode = c->modes[m];
-                    break;
-                }
+            if (c->connector_type == DRM_MODE_CONNECTOR_DSI) {
+                // DSI found — use it and stop looking
+                if (d.conn) drmModeFreeConnector(d.conn);
+                d.conn = c;
+                d.mode = c->modes[0];
+                break;
             }
-            break;
+            // keep as fallback if no DSI found yet
+            if (!d.conn) {
+                d.conn = c;
+                d.mode = c->modes[0];
+                continue;
+            }
         }
         drmModeFreeConnector(c);
-    }
+    }    
     if (!d.conn) { std::cerr << "[drm] No connected display\n"; return false; }
 
     drmModeEncoder* enc = drmModeGetEncoder(d.fd, d.conn->encoder_id);
