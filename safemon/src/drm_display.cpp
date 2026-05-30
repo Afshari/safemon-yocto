@@ -35,9 +35,9 @@ struct DrmContext {
 };
 
 static bool drm_init(DrmContext& ctx) {
-    ctx.fd = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
+    ctx.fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
     if (ctx.fd < 0) {
-        std::cerr << "[drm] Failed to open /dev/dri/card0\n";
+        std::cerr << "[drm] Failed to open /dev/dri/card1\n";
         return false;
     }
 

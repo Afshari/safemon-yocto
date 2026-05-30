@@ -49,9 +49,12 @@ target_link_libraries(drm-display PRIVATE
     ${HIREDIS_LIB}
 )
 
+# egl-triangle
 add_executable(egl-triangle
     src/gl_app.cpp
     src/egl_triangle.cpp
+    src/drm_helper.cpp
+    src/egl_helper.cpp
 )
 
 target_include_directories(egl-triangle PRIVATE
@@ -68,5 +71,29 @@ target_link_libraries(egl-triangle PRIVATE
     ${DRM_LIB}
 )
 
+# gl-display
+add_executable(gl-display
+    src/gl_display.cpp
+    src/gl_app.cpp
+    src/drm_helper.cpp
+    src/egl_helper.cpp
+)
+
+target_include_directories(gl-display PRIVATE
+    inc
+    ${HIREDIS_INCLUDE}
+    ${GBM_INCLUDE}
+    ${DRM_INCLUDE}
+    ${DRM_INCLUDE}/drm
+)
+
+target_link_libraries(gl-display PRIVATE
+    ${EGL_LIB}
+    ${GLES2_LIB}
+    ${GBM_LIB}
+    ${DRM_LIB}
+    ${HIREDIS_LIB}
+)
+
 #  Install
-install(TARGETS safemon-app drm-display egl-triangle DESTINATION bin)
+install(TARGETS safemon-app drm-display egl-triangle gl-display DESTINATION bin)
