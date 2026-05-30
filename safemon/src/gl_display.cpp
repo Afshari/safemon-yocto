@@ -11,6 +11,13 @@
 #include "egl_helper.h"
 #include "gl_app.h"
 
+struct DisplayState {
+    std::string last_frame  = "---";
+    long        frame_count = 0;
+    bool        redis_ok    = false;
+    bool        can_ok      = false;
+};
+
 static volatile bool g_running = true;
 static void signal_handler(int) { g_running = false; }
 
@@ -32,6 +39,14 @@ int main() {
     std::cout << "[gl-display] version: foundation\n";
     std::cout << "[gl-display] Running. Ctrl+C to exit.\n";
 
+    // Redis
+    redisContext* redis = redisConnect("127.0.0.1", 6379);
+    const bool redis_ok = (redis && !redis->err);
+    if (!redis_ok)
+        std::cerr << "[redis] Connection failed\n";
+    else
+        std::cout << "[redis] Connected\n";
+
     gbm_bo*  prev_bo    = nullptr;
     uint32_t prev_fb_id = 0;
 
@@ -47,18 +62,74 @@ int main() {
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // title bar - gray
+        // Read from Redis
+        DisplayState state;
+        state.redis_ok = redis_ok;
+        if (redis_ok) {
+            redisReply* reply = (redisReply*)redisCommand(redis,
+                                "LINDEX safemon:can:frames 0");
+            if (reply && reply->type == REDIS_REPLY_STRING) {
+                state.last_frame = std::string(reply->str, reply->len);
+                state.can_ok     = true;
+            }
+            if (reply) freeReplyObject(reply);
+
+            redisReply* cnt = (redisReply*)redisCommand(redis,
+                            "LLEN safemon:can:frames");
+            if (cnt && cnt->type == REDIS_REPLY_INTEGER)
+                state.frame_count = cnt->integer;
+            if (cnt) freeReplyObject(cnt);
+        }
+
+        // Draw
+        glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // Title bar
         draw_rect(rect_prog, 0, 0, W, 64, 0.27f, 0.27f, 0.27f, W, H);
-        // CAN OK box - green
-        draw_rect(rect_prog, 40, 90, 280, 70, 0.0f, 1.0f, 0.0f, W, H);
-        // REDIS OK box - green  
-        draw_rect(rect_prog, 360, 90, 280, 70, 0.0f, 1.0f, 0.0f, W, H);
-        // footer - gray
-        draw_rect(rect_prog, 0, H - 40, W, 40, 0.27f, 0.27f, 0.27f, W, H);
-        
         draw_text_gl(text_prog, font_tex,
-             20, 18, "SAFEMON STATUS PANEL",
-             1.0f, 1.0f, 1.0f, 3.0f, W, H);
+                    20, 18, "SAFEMON STATUS PANEL",
+                    1.0f, 1.0f, 1.0f, 3.0f, W, H);
+
+        // CAN status box
+        float can_r = state.can_ok ? 0.0f : 1.0f;
+        float can_g = state.can_ok ? 1.0f : 0.0f;
+        draw_rect(rect_prog, 10, 90, 180, 60, can_r, can_g, 0.0f, W, H);
+        draw_text_gl(text_prog, font_tex,
+                    20, 108,
+                    state.can_ok ? "CAN OK" : "CAN ERR",
+                    0.0f, 0.0f, 0.0f, 2.0f, W, H);
+
+        // Redis status box
+        float red_r = state.redis_ok ? 0.0f : 1.0f;
+        float red_g = state.redis_ok ? 1.0f : 0.0f;
+        draw_rect(rect_prog, 200, 90, 180, 60, red_r, red_g, 0.0f, W, H);
+        draw_text_gl(text_prog, font_tex,
+                    210, 108,
+                    state.redis_ok ? "REDIS OK" : "REDIS ERR",
+                    0.0f, 0.0f, 0.0f, 2.0f, W, H);
+
+        // Last frame
+        draw_text_gl(text_prog, font_tex,
+                    10, 175, "LAST FRAME:",
+                    1.0f, 1.0f, 0.0f, 2.0f, W, H);
+        draw_text_gl(text_prog, font_tex,
+                    10, 200, state.last_frame.c_str(),
+                    1.0f, 1.0f, 1.0f, 2.0f, W, H);
+
+        // Frame count
+        draw_text_gl(text_prog, font_tex,
+                    10, 240, "FRAMES IN QUEUE:",
+                    1.0f, 1.0f, 0.0f, 2.0f, W, H);
+        draw_text_gl(text_prog, font_tex,
+                    10, 265, std::to_string(state.frame_count).c_str(),
+                    1.0f, 1.0f, 1.0f, 2.0f, W, H);
+
+        // Footer
+        draw_rect(rect_prog, 0, H - 30, W, 30, 0.27f, 0.27f, 0.27f, W, H);
+        draw_text_gl(text_prog, font_tex,
+                    10, H - 22, "KERNEL 6.12 PREEMPT | SAFEMON 0.1",
+                    1.0f, 1.0f, 0.0f, 1.5f, W, H);
 
         eglSwapBuffers(egl.dpy, egl.surf);
 
@@ -95,6 +166,7 @@ int main() {
     glDeleteProgram(rect_prog);
     glDeleteProgram(text_prog);
     glDeleteTextures(1, &font_tex);
+    if (redis) redisFree(redis);
     egl_cleanup(egl);
     drm_close(drm);
     return 0;
