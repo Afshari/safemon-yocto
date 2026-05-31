@@ -4,7 +4,9 @@
 #include <cstdio>
 #include <cstring>
 #include <hiredis/hiredis.h>
+#include <thread>
 #include "can_reader.h"
+#include "fault_detector.h"
 
 static volatile bool running = true;
 
@@ -22,6 +24,9 @@ int main() {
         return 1;
     }
     std::cout << "Connected to Redis!" << std::endl;
+
+    FaultDetector fault_detector(ctx);
+    fault_detector.start();
 
     // Open CAN interface
     CanReader reader("vcan0");
@@ -63,5 +68,6 @@ int main() {
 
     std::cout << "Shutting down..." << std::endl;
     redisFree(ctx);
+    fault_detector.stop();
     return 0;
 }

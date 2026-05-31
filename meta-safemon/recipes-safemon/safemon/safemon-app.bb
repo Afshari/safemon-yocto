@@ -16,9 +16,11 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/gl_display.cpp \
            file://safemon/src/drm_helper.cpp \
            file://safemon/src/egl_helper.cpp \
+           file://safemon/src/fault_detector.cpp \
            file://safemon/inc/drm_helper.h \
            file://safemon/inc/egl_helper.h \
            file://safemon/inc/gl_app.h \
+           file://safemon/inc/fault_detector.h \
           "
 
 S = "${WORKDIR}/safemon"

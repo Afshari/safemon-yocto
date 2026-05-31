@@ -20,6 +20,7 @@ find_path(GBM_INCLUDE gbm.h REQUIRED)
 add_executable(safemon-app
     src/can_reader.cpp
     src/main.cpp
+    src/fault_detector.cpp
 )
 
 target_include_directories(safemon-app PRIVATE

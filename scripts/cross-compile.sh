@@ -57,9 +57,10 @@ case $TARGET in
     ;;
   safemon-app)
     aarch64-poky-linux-g++ $BASE_FLAGS \
-      -lhiredis \
+      -lhiredis -lpthread \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
+      safemon/src/fault_detector.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
