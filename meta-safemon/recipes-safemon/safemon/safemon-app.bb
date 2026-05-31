@@ -13,7 +13,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/inc/framebuffer.h \
            file://safemon/src/egl_triangle.cpp \
            file://safemon/src/gl_app.cpp \
-           file://safemon/src/gl_display.cpp \
+           file://safemon/src/safemon_display.cpp \
            file://safemon/src/drm_helper.cpp \
            file://safemon/src/egl_helper.cpp \
            file://safemon/src/fault_detector.cpp \
@@ -29,4 +29,4 @@ inherit cmake
 
 DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa"
 
-FILES:${PN} += "${bindir}/safemon-app ${bindir}/drm-display ${bindir}/egl-triangle ${bindir}/gl-display"
+FILES:${PN} += "${bindir}/safemon-app ${bindir}/drm-display ${bindir}/egl-triangle ${bindir}/safemon-display"
