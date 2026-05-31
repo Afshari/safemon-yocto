@@ -10,6 +10,7 @@
 #include "drm_helper.h"
 #include "egl_helper.h"
 #include "gl_app.h"
+#include "fault_detector.h"
 
 struct DisplayState {
     std::string last_frame  = "---";
@@ -81,6 +82,14 @@ int main() {
             if (cnt) freeReplyObject(cnt);
         }
 
+        // Read fault status
+        std::string fault_status = "UNKNOWN";
+        redisReply* fault = (redisReply*)redisCommand(redis,
+                            "GET safemon:faults:current");
+        if (fault && fault->type == REDIS_REPLY_STRING)
+            fault_status = std::string(fault->str, fault->len);
+        if (fault) freeReplyObject(fault);
+
         // Draw
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -124,6 +133,20 @@ int main() {
         draw_text_gl(text_prog, font_tex,
                     10, 265, std::to_string(state.frame_count).c_str(),
                     1.0f, 1.0f, 1.0f, 2.0f, W, H);
+
+        // Fault status box
+        float fr = 0.0f, fg = 0.0f, fb = 0.0f;
+        if (fault_status.substr(0, 2) == "OK")
+            { fr = 0.0f; fg = 1.0f; fb = 0.0f; }  // green
+        else if (fault_status.substr(0, 4) == "WARN")
+            { fr = 1.0f; fg = 0.8f; fb = 0.0f; }  // yellow
+        else
+            { fr = 1.0f; fg = 0.0f; fb = 0.0f; }  // red
+
+        draw_rect(rect_prog, 10, 300, W - 20, 60, fr, fg, fb, W, H);
+        draw_text_gl(text_prog, font_tex,
+                    20, 318, fault_status.c_str(),
+                    0.0f, 0.0f, 0.0f, 1.5f, W, H);
 
         // Footer
         draw_rect(rect_prog, 0, H - 30, W, 30, 0.27f, 0.27f, 0.27f, W, H);
