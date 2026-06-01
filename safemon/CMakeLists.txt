@@ -20,6 +20,8 @@ find_path(GBM_INCLUDE gbm.h REQUIRED)
 add_executable(safemon-app
     src/can_reader.cpp
     src/main.cpp
+    src/fault_detector.cpp
+    src/config.cpp
 )
 
 target_include_directories(safemon-app PRIVATE
@@ -55,6 +57,7 @@ add_executable(egl-triangle
     src/egl_triangle.cpp
     src/drm_helper.cpp
     src/egl_helper.cpp
+    src/config.cpp
 )
 
 target_include_directories(egl-triangle PRIVATE
@@ -71,15 +74,16 @@ target_link_libraries(egl-triangle PRIVATE
     ${DRM_LIB}
 )
 
-# gl-display
-add_executable(gl-display
-    src/gl_display.cpp
+# safemon-display
+add_executable(safemon-display
+    src/safemon_display.cpp
     src/gl_app.cpp
     src/drm_helper.cpp
     src/egl_helper.cpp
+    src/config.cpp
 )
 
-target_include_directories(gl-display PRIVATE
+target_include_directories(safemon-display PRIVATE
     inc
     ${HIREDIS_INCLUDE}
     ${GBM_INCLUDE}
@@ -87,7 +91,7 @@ target_include_directories(gl-display PRIVATE
     ${DRM_INCLUDE}/drm
 )
 
-target_link_libraries(gl-display PRIVATE
+target_link_libraries(safemon-display PRIVATE
     ${EGL_LIB}
     ${GLES2_LIB}
     ${GBM_LIB}
@@ -96,4 +100,4 @@ target_link_libraries(gl-display PRIVATE
 )
 
 #  Install
-install(TARGETS safemon-app drm-display egl-triangle gl-display DESTINATION bin)
+install(TARGETS safemon-app drm-display egl-triangle safemon-display DESTINATION bin)

@@ -1,8 +1,11 @@
 #include "drm_helper.h"
 
-bool drm_open(DrmState& d) {
-    d.fd = open("/dev/dri/card1", O_RDWR | O_CLOEXEC);
-    if (d.fd < 0) { std::cerr << "[drm] Cannot open card1\n"; return false; }
+bool drm_open(DrmState& d, const SafemonConfig& cfg) {
+    d.fd = open(cfg.drm_device.c_str(), O_RDWR | O_CLOEXEC);
+    if (d.fd < 0) {
+        std::cerr << "[drm] Cannot open " << cfg.drm_device << "\n";
+        return false;
+    }
 
     d.res = drmModeGetResources(d.fd);
     if (!d.res) { std::cerr << "[drm] No resources\n"; return false; }

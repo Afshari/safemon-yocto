@@ -3,7 +3,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <target>"
-    echo "  targets: egl-triangle, drm-display, safemon-app, gl-display"
+    echo "  targets: egl-triangle, drm-display, safemon-app, safemon-display"
     exit 1
 fi
 
@@ -33,6 +33,7 @@ case $TARGET in
       safemon/src/drm_helper.cpp \
       safemon/src/egl_helper.cpp \
       safemon/src/gl_app.cpp \
+      safemon/src/config.cpp \
       safemon/src/egl_triangle.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
@@ -45,21 +46,24 @@ case $TARGET in
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
-  gl-display)
+  safemon-display)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lgbm -ldrm -lhiredis \
       safemon/src/drm_helper.cpp \
       safemon/src/egl_helper.cpp \
-      safemon/src/gl_display.cpp \
+      safemon/src/safemon_display.cpp \
       safemon/src/gl_app.cpp \
+      safemon/src/config.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
   safemon-app)
     aarch64-poky-linux-g++ $BASE_FLAGS \
-      -lhiredis \
+      -lhiredis -lpthread \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
+      safemon/src/fault_detector.cpp \
+      safemon/src/config.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
