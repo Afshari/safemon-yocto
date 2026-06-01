@@ -3,8 +3,10 @@
 #include <sstream>
 #include <unistd.h>
 
-FaultDetector::FaultDetector(redisContext* redis)
+FaultDetector::FaultDetector(redisContext* redis,
+                               const SafemonConfig& cfg)
     : redis_(redis)
+    , cfg_(cfg)
     , running_(false)
     , last_frame_time_(std::chrono::steady_clock::now())
     , last_seen_frame_("") {}
@@ -90,11 +92,11 @@ bool FaultDetector::check_timeout() {
     auto now     = std::chrono::steady_clock::now();
     auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
                    now - last_frame_time_).count();
-    return elapsed >= TIMEOUT_SECONDS;
+    return elapsed >= cfg_.timeout_seconds;
 }
 
 bool FaultDetector::check_unknown_id(uint32_t id) {
-    return KNOWN_IDS.find(id) == KNOWN_IDS.end();
+    return cfg_.known_ids.find(id) == cfg_.known_ids.end();
 }
 
 void FaultDetector::publish_fault(const std::string& level,

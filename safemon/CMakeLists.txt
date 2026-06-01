@@ -21,6 +21,7 @@ add_executable(safemon-app
     src/can_reader.cpp
     src/main.cpp
     src/fault_detector.cpp
+    src/config.cpp
 )
 
 target_include_directories(safemon-app PRIVATE
@@ -56,6 +57,7 @@ add_executable(egl-triangle
     src/egl_triangle.cpp
     src/drm_helper.cpp
     src/egl_helper.cpp
+    src/config.cpp
 )
 
 target_include_directories(egl-triangle PRIVATE
@@ -78,6 +80,7 @@ add_executable(safemon-display
     src/gl_app.cpp
     src/drm_helper.cpp
     src/egl_helper.cpp
+    src/config.cpp
 )
 
 target_include_directories(safemon-display PRIVATE

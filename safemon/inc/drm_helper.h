@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include "config.h"
 
 // ---------------------------------------------------------------------------
 // DRM/KMS
@@ -16,6 +17,6 @@ struct DrmState {
     drmModeModeInfo   mode    = {};
 };
 
-bool drm_open(DrmState& d);
+bool drm_open(DrmState& d, const SafemonConfig& cfg);
 void drm_close(DrmState& d);
 

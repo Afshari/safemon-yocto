@@ -10,6 +10,7 @@
 #include "drm_helper.h"
 #include "egl_helper.h"
 #include "gl_app.h"
+#include "config.h"
 #include "fault_detector.h"
 
 struct DisplayState {
@@ -26,9 +27,11 @@ int main() {
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
 
+    SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
+
     // DRM init
     DrmState drm;
-    if (!drm_open(drm)) return 1;
+    if (!drm_open(drm, cfg)) return 1;
 
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
@@ -41,7 +44,7 @@ int main() {
     std::cout << "[gl-display] Running. Ctrl+C to exit.\n";
 
     // Redis
-    redisContext* redis = redisConnect("127.0.0.1", 6379);
+    redisContext* redis = redisConnect(cfg.redis_host.c_str(), cfg.redis_port);
     const bool redis_ok = (redis && !redis->err);
     if (!redis_ok)
         std::cerr << "[redis] Connection failed\n";

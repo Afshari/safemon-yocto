@@ -33,6 +33,7 @@ case $TARGET in
       safemon/src/drm_helper.cpp \
       safemon/src/egl_helper.cpp \
       safemon/src/gl_app.cpp \
+      safemon/src/config.cpp \
       safemon/src/egl_triangle.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
@@ -52,6 +53,7 @@ case $TARGET in
       safemon/src/egl_helper.cpp \
       safemon/src/safemon_display.cpp \
       safemon/src/gl_app.cpp \
+      safemon/src/config.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
@@ -61,6 +63,7 @@ case $TARGET in
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
       safemon/src/fault_detector.cpp \
+      safemon/src/config.cpp \
       -I safemon/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;

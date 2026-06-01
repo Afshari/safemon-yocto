@@ -9,14 +9,18 @@
 #include "drm_helper.h"
 #include "egl_helper.h"
 #include "gl_app.h"
+#include "config.h"
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 int main() {
+
+    SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
+
     //  DRM 
     DrmState drm;
-    if (!drm_open(drm)) return 1;
+    if (!drm_open(drm, cfg)) return 1;
     std::cout << "[egl-triangle] version: double-buffered render loop (Refactored)\n";
 
     uint32_t W = drm.mode.hdisplay;

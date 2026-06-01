@@ -6,6 +6,7 @@
 #include <hiredis/hiredis.h>
 #include <thread>
 #include "can_reader.h"
+#include "config.h"
 #include "fault_detector.h"
 
 static volatile bool running = true;
@@ -16,16 +17,17 @@ void signal_handler(int) {
 
 int main() {
     std::signal(SIGINT, signal_handler);
+    SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
 
     // Connect to Redis
-    redisContext* ctx = redisConnect("127.0.0.1", 6379);
+    redisContext* ctx = redisConnect(cfg.redis_host.c_str(), cfg.redis_port);
     if (!ctx || ctx->err) {
         std::cerr << "Redis connection failed" << std::endl;
         return 1;
     }
     std::cout << "Connected to Redis!" << std::endl;
 
-    FaultDetector fault_detector(ctx);
+    FaultDetector fault_detector(ctx, cfg);
     fault_detector.start();
 
     // Open CAN interface

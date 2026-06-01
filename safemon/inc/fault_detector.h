@@ -5,17 +5,13 @@
 #include <atomic>
 #include <chrono>
 #include <hiredis/hiredis.h>
+#include "config.h"
 
-// Known valid CAN IDs
-const std::set<uint32_t> KNOWN_IDS = { 0x123, 0x456, 0x789 };
-
-// Fault thresholds
-const int TIMEOUT_SECONDS   = 5;
-const int DETECTOR_INTERVAL = 1; // check every 1 second
+const int DETECTOR_INTERVAL = 1;
 
 class FaultDetector {
 public:
-    FaultDetector(redisContext* redis);
+    FaultDetector(redisContext* redis, const SafemonConfig& cfg);
     void start();
     void stop();
 
@@ -34,4 +30,5 @@ private:
     std::atomic<bool> running_;
     std::chrono::steady_clock::time_point last_frame_time_;
     std::string       last_seen_frame_;
+    SafemonConfig cfg_;
 };
