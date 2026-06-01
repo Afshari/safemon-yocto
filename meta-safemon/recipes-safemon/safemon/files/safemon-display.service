@@ -1,0 +1,13 @@
+[Unit]
+Description=Safemon GPU Display
+After=safemon-app.service
+Wants=safemon-app.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/safemon-display
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Safemon CAN Reader and Fault Detector
+After=network.target redis.service
+Requires=redis.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/safemon-app
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

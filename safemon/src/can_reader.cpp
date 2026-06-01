@@ -8,6 +8,8 @@
 #include <sys/ioctl.h>
 #include <linux/can.h>
 #include <linux/can/raw.h>
+#include <sys/time.h>
+#include <cerrno>
 
 CanReader::CanReader(const std::string& interface)
     : interface_(interface), socket_fd_(-1) {}
@@ -40,6 +42,11 @@ bool CanReader::open() {
         return false;
     }
 
+    struct timeval tv;
+    tv.tv_sec  = 1;
+    tv.tv_usec = 0;
+    setsockopt(socket_fd_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
     std::cout << "CAN socket opened on " << interface_ << std::endl;
     return true;
 }
@@ -55,6 +62,9 @@ bool CanReader::read(CanFrame& frame) {
     struct can_frame raw;
     ssize_t nbytes = ::read(socket_fd_, &raw, sizeof(raw));
     if (nbytes < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return false;  // timeout - not an error
+        }
         std::cerr << "Error reading CAN frame" << std::endl;
         return false;
     }
