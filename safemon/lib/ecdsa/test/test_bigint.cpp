@@ -38,7 +38,7 @@ TEST(BigInt, Multiplication) {
 TEST(BigInt, Modulo) {
     BigInt a("1f");  // 31
     BigInt m("0a");  // 10
-    EXPECT_EQ((a % m).to_hex(), "5");
+    EXPECT_EQ((a % m).to_hex(), "1");
 }
 
 TEST(BigInt, ModAdd) {
