@@ -1,8 +1,7 @@
 #include "ecdsa.h"
-#include <openssl/sha.h>
+#include <openssl/evp.h>
 #include <fstream>
 #include <stdexcept>
-#include <random>
 #include <array>
 
 namespace ecdsa {
@@ -128,17 +127,32 @@ std::vector<uint8_t> hash_file(const std::string& path) {
         throw std::runtime_error("hash_file: cannot open " + path);
     }
 
-    SHA256_CTX ctx;
-    SHA256_Init(&ctx);
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    if (!ctx) {
+        throw std::runtime_error("hash_file: EVP_MD_CTX_new failed");
+    }
+
+    if (EVP_DigestInit_ex(ctx, EVP_sha256(), nullptr) != 1) {
+        EVP_MD_CTX_free(ctx);
+        throw std::runtime_error("hash_file: EVP_DigestInit_ex failed");
+    }
 
     std::array<char, 4096> buf{};
     while (file.read(buf.data(), buf.size()) || file.gcount() > 0) {
-        SHA256_Update(&ctx, buf.data(), static_cast<size_t>(file.gcount()));
+        if (EVP_DigestUpdate(ctx, buf.data(), static_cast<size_t>(file.gcount())) != 1) {
+            EVP_MD_CTX_free(ctx);
+            throw std::runtime_error("hash_file: EVP_DigestUpdate failed");
+        }
     }
 
     std::vector<uint8_t> digest(32);
-    SHA256_Final(digest.data(), &ctx);
+    unsigned int digest_len = 0;
+    if (EVP_DigestFinal_ex(ctx, digest.data(), &digest_len) != 1) {
+        EVP_MD_CTX_free(ctx);
+        throw std::runtime_error("hash_file: EVP_DigestFinal_ex failed");
+    }
+
+    EVP_MD_CTX_free(ctx);
     return digest;
 }
-
 } // namespace ecdsa

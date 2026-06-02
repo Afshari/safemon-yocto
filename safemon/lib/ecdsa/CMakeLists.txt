@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_library(GMP_LIB gmp REQUIRED)
 find_path(GMP_INCLUDE gmp.h REQUIRED)
 
+# OpenSSL
+find_package(OpenSSL REQUIRED)
+
 # ECDSA library
 add_library(ecdsa
     src/bigint.cpp
@@ -20,7 +23,7 @@ target_include_directories(ecdsa
     PRIVATE ${GMP_INCLUDE}
 )
 
-target_link_libraries(ecdsa PRIVATE ${GMP_LIB})
+target_link_libraries(ecdsa PRIVATE ${GMP_LIB} OpenSSL::Crypto)
 
 # Tests (only when built directly, not when included from parent)
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
