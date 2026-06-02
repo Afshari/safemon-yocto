@@ -1,0 +1,6 @@
+services:
+  ecdsa-test:
+    build: .
+    image: safemon-dev:latest
+    stdin_open: true
+    tty: true
