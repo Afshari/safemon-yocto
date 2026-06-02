@@ -33,6 +33,8 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/ecdsa/inc/ecdsa_verify_file.h \
            file://safemon/lib/ecdsa/CMakeLists.txt \
            file://safemon.conf \
+           file://safemon.conf.sig \
+           file://safemon.pub \
            file://safemon-app.service \
            file://safemon-display.service \
           "
@@ -51,6 +53,13 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/safemon.conf \
         ${D}${sysconfdir}/safemon/safemon.conf
 
+    install -m 0644 ${WORKDIR}/safemon.conf.sig \
+        ${D}${sysconfdir}/safemon/safemon.conf.sig
+
+    install -d ${D}${sysconfdir}/safemon/pki
+    install -m 0644 ${WORKDIR}/safemon.pub \
+        ${D}${sysconfdir}/safemon/pki/safemon.pub
+
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/safemon-app.service \
         ${D}${systemd_system_unitdir}/safemon-app.service
@@ -63,5 +72,7 @@ FILES:${PN} += "${bindir}/safemon-app \
                 ${bindir}/egl-triangle \
                 ${bindir}/safemon-display \
                 ${sysconfdir}/safemon/safemon.conf \
+                ${sysconfdir}/safemon/safemon.conf.sig \
+                ${sysconfdir}/safemon/pki/safemon.pub \
                 ${systemd_system_unitdir}/safemon-app.service \
                 ${systemd_system_unitdir}/safemon-display.service"
