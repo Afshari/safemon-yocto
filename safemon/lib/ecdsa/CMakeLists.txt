@@ -10,6 +10,7 @@ add_library(ecdsa
     src/bigint.cpp
     src/ec_point.cpp
     src/ecdsa.cpp
+    src/ecdsa_verify_file.cpp
 )
 
 target_include_directories(ecdsa

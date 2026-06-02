@@ -59,12 +59,17 @@ case $TARGET in
     ;;
   safemon-app)
     aarch64-poky-linux-g++ $BASE_FLAGS \
-      -lhiredis -lpthread \
+      -lhiredis -lpthread -lgmp -lcrypto \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
       safemon/src/fault_detector.cpp \
       safemon/src/config.cpp \
+      safemon/lib/ecdsa/src/bigint.cpp \
+      safemon/lib/ecdsa/src/ec_point.cpp \
+      safemon/lib/ecdsa/src/ecdsa.cpp \
+      safemon/lib/ecdsa/src/ecdsa_verify_file.cpp \
       -I safemon/inc \
+      -I safemon/lib/ecdsa/inc \
       -o $REPO_ROOT/out/$TARGET
     ;;
   *)

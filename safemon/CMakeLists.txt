@@ -8,6 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_library(HIREDIS_LIB hiredis REQUIRED)
 find_path(HIREDIS_INCLUDE hiredis/hiredis.h REQUIRED)
 
+find_library(GMP_LIB gmp REQUIRED)
+find_path(GMP_INCLUDE gmp.h REQUIRED)
+find_package(OpenSSL REQUIRED)
+
+add_subdirectory(lib/ecdsa)
+
 find_library(DRM_LIB drm REQUIRED)
 find_path(DRM_INCLUDE xf86drm.h REQUIRED)
 
@@ -27,10 +33,13 @@ add_executable(safemon-app
 target_include_directories(safemon-app PRIVATE
     inc
     ${HIREDIS_INCLUDE}
+    ${GMP_INCLUDE}
+    lib/ecdsa/inc
 )
 
 target_link_libraries(safemon-app PRIVATE
     ${HIREDIS_LIB}
+    ecdsa
 )
 
 #  drm-display  (Redis - DRM/KMS status panel)
