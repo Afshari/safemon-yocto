@@ -23,6 +23,15 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/inc/gl_app.h \
            file://safemon/inc/fault_detector.h \
            file://safemon/inc/config.h \
+           file://safemon/lib/ecdsa/src/bigint.cpp \
+           file://safemon/lib/ecdsa/src/ec_point.cpp \
+           file://safemon/lib/ecdsa/src/ecdsa.cpp \
+           file://safemon/lib/ecdsa/src/ecdsa_verify_file.cpp \
+           file://safemon/lib/ecdsa/inc/bigint.h \
+           file://safemon/lib/ecdsa/inc/ec_point.h \
+           file://safemon/lib/ecdsa/inc/ecdsa.h \
+           file://safemon/lib/ecdsa/inc/ecdsa_verify_file.h \
+           file://safemon/lib/ecdsa/CMakeLists.txt \
            file://safemon.conf \
            file://safemon-app.service \
            file://safemon-display.service \
@@ -32,7 +41,7 @@ S = "${WORKDIR}/safemon"
 
 inherit cmake systemd
 
-DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa"
+DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa gmp openssl"
 
 SYSTEMD_SERVICE:${PN} = "safemon-app.service safemon-display.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"

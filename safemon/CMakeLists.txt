@@ -12,8 +12,6 @@ find_library(GMP_LIB gmp REQUIRED)
 find_path(GMP_INCLUDE gmp.h REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-add_subdirectory(lib/ecdsa)
-
 find_library(DRM_LIB drm REQUIRED)
 find_path(DRM_INCLUDE xf86drm.h REQUIRED)
 
@@ -22,12 +20,21 @@ find_library(GLES2_LIB GLESv2 REQUIRED)
 find_library(GBM_LIB gbm REQUIRED)
 find_path(GBM_INCLUDE gbm.h REQUIRED)
 
+# ecdsa sources
+set(ECDSA_SRC
+    lib/ecdsa/src/bigint.cpp
+    lib/ecdsa/src/ec_point.cpp
+    lib/ecdsa/src/ecdsa.cpp
+    lib/ecdsa/src/ecdsa_verify_file.cpp
+)
+
 #  safemon-app  (CAN reader - Redis)
 add_executable(safemon-app
     src/can_reader.cpp
     src/main.cpp
     src/fault_detector.cpp
     src/config.cpp
+    ${ECDSA_SRC}
 )
 
 target_include_directories(safemon-app PRIVATE
@@ -39,7 +46,8 @@ target_include_directories(safemon-app PRIVATE
 
 target_link_libraries(safemon-app PRIVATE
     ${HIREDIS_LIB}
-    ecdsa
+    ${GMP_LIB}
+    OpenSSL::Crypto
 )
 
 #  drm-display  (Redis - DRM/KMS status panel)
