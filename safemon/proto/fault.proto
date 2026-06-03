@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package safemon;
+
+service FaultService {
+    rpc StreamFaults (StreamRequest) returns (stream FaultEvent);
+}
+
+message StreamRequest {
+    // empty for now - client just connects and receives all events
+}
+
+message FaultEvent {
+    string status     = 1;   // e.g. "OK:NO_FAULT", "ERROR:TIMEOUT", "WARN:UNKNOWN_ID:0x123"
+    int64  timestamp  = 2;   // unix timestamp seconds
+    string source     = 3;   // "safemon-app"
+    string signature  = 4;   // hex ECDSA signature (Phase 5, empty for now)
+}
