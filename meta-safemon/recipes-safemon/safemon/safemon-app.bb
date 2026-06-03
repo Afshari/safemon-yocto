@@ -37,13 +37,20 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon.pub \
            file://safemon-app.service \
            file://safemon-display.service \
+           file://safemon/src/grpc_server.cpp \
+           file://safemon/inc/grpc_server.h \
+           file://safemon/proto/fault.proto \
+           file://safemon/proto/fault.pb.cc \
+           file://safemon/proto/fault.pb.h \
+           file://safemon/proto/fault.grpc.pb.cc \
+           file://safemon/proto/fault.grpc.pb.h \
           "
 
 S = "${WORKDIR}/safemon"
 
 inherit cmake systemd
 
-DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa gmp openssl"
+DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa gmp openssl grpc protobuf"
 
 SYSTEMD_SERVICE:${PN} = "safemon-app.service safemon-display.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"

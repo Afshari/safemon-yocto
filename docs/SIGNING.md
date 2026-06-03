@@ -11,15 +11,7 @@ with an unsigned or tampered config.
 
 ## How it works
 
-```
-Laptop                                  Raspberry Pi
-------                                  ------------
-safemon.key (private, never leaves)
-    |
-    | sign
-    v
-safemon.conf + safemon.conf.sig  --->  verify on startup using safemon.pub
-```
+![](safemon_signing_workflow.svg)
 
 ---
 
@@ -92,6 +84,8 @@ python3 safemon/tools/safemon-sign/safemon_sign.py verify \
 ---
 
 ## File locations
+
+![](safemon_key_files.svg)
 
 | File | Location | Notes |
 |------|----------|-------|

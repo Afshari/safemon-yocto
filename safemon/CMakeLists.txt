@@ -12,6 +12,9 @@ find_library(GMP_LIB gmp REQUIRED)
 find_path(GMP_INCLUDE gmp.h REQUIRED)
 find_package(OpenSSL REQUIRED)
 
+find_package(Protobuf REQUIRED)
+find_package(gRPC CONFIG REQUIRED)
+
 find_library(DRM_LIB drm REQUIRED)
 find_path(DRM_INCLUDE xf86drm.h REQUIRED)
 
@@ -28,29 +31,41 @@ set(ECDSA_SRC
     lib/ecdsa/src/ecdsa_verify_file.cpp
 )
 
-#  safemon-app  (CAN reader - Redis)
+# proto generated sources
+set(PROTO_SRC
+    proto/fault.pb.cc
+    proto/fault.grpc.pb.cc
+)
+
+# safemon-app
 add_executable(safemon-app
     src/can_reader.cpp
     src/main.cpp
     src/fault_detector.cpp
     src/config.cpp
+    src/grpc_server.cpp
     ${ECDSA_SRC}
+    ${PROTO_SRC}
 )
 
 target_include_directories(safemon-app PRIVATE
     inc
     ${HIREDIS_INCLUDE}
     ${GMP_INCLUDE}
+    ${Protobuf_INCLUDE_DIRS}
     lib/ecdsa/inc
+    proto
 )
 
 target_link_libraries(safemon-app PRIVATE
     ${HIREDIS_LIB}
     ${GMP_LIB}
     OpenSSL::Crypto
+    protobuf::libprotobuf
+    gRPC::grpc++
 )
 
-#  drm-display  (Redis - DRM/KMS status panel)
+# drm-display
 add_executable(drm-display
     src/drm_display.cpp
     src/framebuffer.cpp
@@ -116,5 +131,6 @@ target_link_libraries(safemon-display PRIVATE
     ${HIREDIS_LIB}
 )
 
-#  Install
-install(TARGETS safemon-app drm-display egl-triangle safemon-display DESTINATION bin)
+# Install
+install(TARGETS safemon-app drm-display egl-triangle safemon-display
+        DESTINATION bin)

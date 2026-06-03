@@ -9,6 +9,7 @@
 #include "config.h"
 #include "fault_detector.h"
 #include "ecdsa_verify_file.h"
+#include "grpc_server.h"
 
 static volatile bool running = true;
 
@@ -41,6 +42,9 @@ int main()
 
     FaultDetector fault_detector(ctx, cfg);
     fault_detector.start();
+
+    GrpcServer grpc_server(cfg, "0.0.0.0:50051");
+    grpc_server.start();
 
     // Open CAN interface
     CanReader reader("vcan0");
@@ -88,5 +92,6 @@ int main()
     std::cout << "Shutting down..." << std::endl;
     redisFree(ctx);
     fault_detector.stop();
+    grpc_server.stop();
     return 0;
 }

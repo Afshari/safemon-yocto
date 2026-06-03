@@ -60,16 +60,21 @@ case $TARGET in
   safemon-app)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lhiredis -lpthread -lgmp -lcrypto \
+      -lgrpc++ -lgrpc -lprotobuf \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
       safemon/src/fault_detector.cpp \
       safemon/src/config.cpp \
+      safemon/src/grpc_server.cpp \
       safemon/lib/ecdsa/src/bigint.cpp \
       safemon/lib/ecdsa/src/ec_point.cpp \
       safemon/lib/ecdsa/src/ecdsa.cpp \
       safemon/lib/ecdsa/src/ecdsa_verify_file.cpp \
+      safemon/proto/fault.pb.cc \
+      safemon/proto/fault.grpc.pb.cc \
       -I safemon/inc \
       -I safemon/lib/ecdsa/inc \
+      -I safemon/proto \
       -o $REPO_ROOT/out/$TARGET
     ;;
   *)
