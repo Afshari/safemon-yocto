@@ -17,6 +17,8 @@ with an unsigned or tampered config.
 
 ## One-time setup
 
+![](safemon_onetime_setup.svg)
+
 ### 1. Generate a key pair
 
 Run once on your laptop. Keep the private key safe — never commit it to git,

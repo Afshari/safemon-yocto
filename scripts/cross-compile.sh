@@ -61,6 +61,15 @@ case $TARGET in
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lhiredis -lpthread -lgmp -lcrypto \
       -lgrpc++ -lgrpc -lprotobuf \
+      -labsl_log_internal_check_op -labsl_log_initialize \
+      -labsl_log_globals -labsl_log_entry -labsl_log_sink \
+      -labsl_log_internal_message -labsl_log_internal_format \
+      -labsl_log_internal_globals -labsl_log_internal_log_sink_set \
+      -labsl_log_internal_conditions -labsl_log_internal_proto \
+      -labsl_log_internal_nullguard -labsl_strings -labsl_base \
+      -labsl_raw_logging_internal -labsl_spinlock_wait \
+      -labsl_synchronization -labsl_status -labsl_statusor \
+      -labsl_time -labsl_time_zone \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
       safemon/src/fault_detector.cpp \
