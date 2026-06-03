@@ -40,7 +40,7 @@ int main()
     }
     std::cout << "Connected to Redis!" << std::endl;
 
-    FaultDetector fault_detector(ctx, cfg);
+    FaultDetector fault_detector(cfg);
     fault_detector.start();
 
     GrpcServer grpc_server(cfg, "0.0.0.0:50051");
