@@ -11,9 +11,13 @@ const int DETECTOR_INTERVAL = 1;
 
 class FaultDetector {
 public:
-    FaultDetector(redisContext* redis, const SafemonConfig& cfg);
+    FaultDetector(const SafemonConfig& cfg);
     void start();
     void stop();
+
+    ~FaultDetector() {
+        if (redis_) redisFree(redis_);
+    }
 
 private:
     void run();

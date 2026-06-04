@@ -1,0 +1,6 @@
+services:
+  safemon-dev:
+    build: .
+    image: safemon-dev:latest
+    stdin_open: true
+    tty: true

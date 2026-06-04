@@ -3,13 +3,15 @@
 #include <sstream>
 #include <unistd.h>
 
-FaultDetector::FaultDetector(redisContext* redis,
-                               const SafemonConfig& cfg)
-    : redis_(redis)
-    , cfg_(cfg)
+FaultDetector::FaultDetector(const SafemonConfig& cfg)
+    : cfg_(cfg)
     , running_(false)
     , last_frame_time_(std::chrono::steady_clock::now())
-    , last_seen_frame_("") {}
+    , last_seen_frame_("") {
+    redis_ = redisConnect(cfg_.redis_host.c_str(), cfg_.redis_port);
+    if (!redis_ || redis_->err)
+        std::cerr << "[fault] Redis connection failed\n";
+}
 
 void FaultDetector::start() {
     running_ = true;
