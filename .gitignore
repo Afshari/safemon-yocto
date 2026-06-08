@@ -1,6 +1,7 @@
 # Yocto build directory - never commit this
 build-rpi4/
 build-qemu/
+build-jetson/
 build/
 
 # Yocto downloads cache
@@ -13,6 +14,7 @@ sstate-cache/
 poky/
 meta-raspberrypi/
 meta-openembedded/
+meta-tegra
 
 # Wi-Fi credentials - NEVER commit
 meta-safemon/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf

@@ -16,5 +16,8 @@ based on ISO 26262, targeting Raspberry Pi 4.
 - meta-raspberrypi (scarthgap)
 - meta-openembedded (scarthgap)
 
+export KAS_BUILD_DIR=build-jetson
+kas build kas-jetson.yml
+
 ## Setup
 See docs/ for build instructions.
