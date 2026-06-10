@@ -1,3 +1,6 @@
+
+#ifndef PLATFORM_JETSON
+
 #include "egl_helper.h"
 
 bool egl_init(EglContext& e, int drm_fd, uint32_t W, uint32_t H) {
@@ -80,3 +83,5 @@ void egl_cleanup(EglContext& e) {
     gbm_surface_destroy(e.gbm_surf);
     gbm_device_destroy(e.gbm);
 }
+
+#endif // PLATFORM_JETSON

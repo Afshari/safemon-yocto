@@ -30,11 +30,18 @@ int main() {
     SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
 
     // DRM init
+#ifndef PLATFORM_JETSON
     DrmState drm;
     if (!drm_open(drm, cfg)) return 1;
-
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
+#else
+    // On Jetson, Weston owns the display - use fixed resolution
+    // Update these values if your monitor is different
+    DrmState drm;  // kept for cleanup compatibility, not used for display
+    uint32_t W = 1920;
+    uint32_t H = 1080;
+#endif
 
     // EGL init
     EglContext egl;
@@ -51,8 +58,10 @@ int main() {
     else
         std::cout << "[redis] Connected\n";
 
+#ifndef PLATFORM_JETSON
     gbm_bo*  prev_bo    = nullptr;
     uint32_t prev_fb_id = 0;
+#endif
 
     glViewport(0, 0, W, H);
 
@@ -159,6 +168,7 @@ int main() {
 
         eglSwapBuffers(egl.dpy, egl.surf);
 
+#ifndef PLATFORM_JETSON
         // GBM -> DRM
         gbm_bo* bo = gbm_surface_lock_front_buffer(egl.gbm_surf);
         if (!bo) break;
@@ -180,15 +190,18 @@ int main() {
         }
         prev_bo    = bo;
         prev_fb_id = fb_id;
+#endif // PLATFORM_JETSON
 
         sleep(1);
     }
 
     // Cleanup
+#ifndef PLATFORM_JETSON
     if (prev_bo) {
         drmModeRmFB(drm.fd, prev_fb_id);
         gbm_surface_release_buffer(egl.gbm_surf, prev_bo);
     }
+#endif
     glDeleteProgram(rect_prog);
     glDeleteProgram(text_prog);
     glDeleteTextures(1, &font_tex);

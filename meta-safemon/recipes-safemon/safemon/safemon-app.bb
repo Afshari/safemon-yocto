@@ -15,7 +15,8 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/gl_app.cpp \
            file://safemon/src/safemon_display.cpp \
            file://safemon/src/drm_helper.cpp \
-           file://safemon/src/egl_helper.cpp \
+           file://safemon/src/egl_helper_gbm.cpp \
+           file://safemon/src/egl_helper_wayland.cpp \
            file://safemon/src/fault_detector.cpp \
            file://safemon/src/config.cpp \
            file://safemon/inc/drm_helper.h \
@@ -49,8 +50,16 @@ SRC_URI = "file://safemon/CMakeLists.txt \
 S = "${WORKDIR}/safemon"
 
 inherit cmake systemd
+# Default platform is rpi4
+EXTRA_OECMAKE = " -DPLATFORM=rpi4"
+# Override for Jetson
+EXTRA_OECMAKE:jetson-orin-nano-devkit = " -DPLATFORM=jetson"
 
-DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa gmp openssl grpc protobuf"
+DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl gmp openssl grpc protobuf"
+# RPi4 needs Mesa/GBM
+DEPENDS:append:raspberrypi4-64 = " mesa"
+# Jetson needs Wayland
+DEPENDS:append:jetson-orin-nano-devkit = " wayland wayland-native wayland-protocols"
 
 SYSTEMD_SERVICE:${PN} = "safemon-app.service safemon-display.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
