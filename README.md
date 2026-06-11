@@ -1,23 +1,98 @@
-# safemon-rpi4-yocto
+# safemon
 
-Custom Yocto layer and application for functional safety monitoring
-based on ISO 26262, targeting Raspberry Pi 4.
+A custom embedded Linux functional safety monitor built with Yocto Scarthgap 5.0.
+Monitors CAN bus frames, detects faults, streams fault events over gRPC, and renders
+a live status dashboard using OpenGL ES. Designed around ISO 26262 principles.
 
-## Components
-- `meta-custom/` — Yocto BSP layer (Wi-Fi, PREEMPT_RT kernel, safemon recipe)
-- `safemon/` — Functional safety CAN monitor application (C++/Python)
+## Table of Contents
 
-## Target Hardware
-- Raspberry Pi 4 Model B
-- Yocto Scarthgap 5.0
+- [Supported Targets](#supported-targets)
+- [System Architecture](#system-architecture)
+- [Repository Structure](#repository-structure)
+- [Quick Start](#quick-start)
+- [Hardware](#hardware)
+- [Dependencies](#dependencies)
+- [Documentation](#documentation)
 
-## Dependencies (clone separately)
-- poky (scarthgap)
-- meta-raspberrypi (scarthgap)
-- meta-openembedded (scarthgap)
+## Supported Targets
 
-export KAS_BUILD_DIR=build-jetson
-kas build kas-jetson.yml
+| Target | Machine | Display | Status |
+|--------|---------|---------|--------|
+| Raspberry Pi 4 | `raspberrypi4-64` | OpenGL ES via GBM/DRM — DSI LCD or HDMI | Working |
+| Jetson Orin Nano | `jetson-orin-nano-devkit` | OpenGL ES via Wayland/Weston — HDMI | Working |
+| QEMU | `qemuarm64` | OpenGL ES via virtio-gpu — GTK window | Working |
 
-## Setup
-See docs/ for build instructions.
+
+
+## System Architecture
+
+Architecture diagram coming soon — see `docs/` for SVG diagrams.
+
+The full pipeline:
+
+    vcan0 -> safemon-app -> Redis -> FaultDetector -> safemon-display (OpenGL ES)
+                                                   -> gRPC server -> remote clients
+
+## Repository Structure
+
+    safemon-yocto/
+    ├── docs/                        -- documentation and architecture diagrams
+    ├── meta-safemon/                -- custom Yocto layer
+    │   ├── conf/                    -- distro configs (RPi4, Jetson, QEMU)
+    │   ├── recipes-bsp/             -- board support patches
+    │   ├── recipes-connectivity/    -- Wi-Fi, vcan network config
+    │   ├── recipes-kernel/          -- kernel config fragments
+    │   └── recipes-safemon/         -- safemon-app and safemon-display recipes
+    ├── safemon/                     -- C++ application source
+    │   ├── src/                     -- application source files
+    │   ├── inc/                     -- headers
+    │   ├── lib/                     -- ECDSA library
+    │   ├── proto/                   -- gRPC protobuf definitions
+    │   └── tools/                   -- Python tools (signing, fault client)
+    ├── scripts/                     -- build and test helper scripts
+    ├── kas-rpi4.yml                 -- kas build config for Raspberry Pi 4
+    └── kas-jetson.yml               -- kas build config for Jetson Orin Nano
+
+## Quick Start
+
+Build and flash an image for your target:
+
+**Raspberry Pi 4**
+
+    kas build kas-rpi4.yml
+
+**Jetson Orin Nano**
+
+    KAS_BUILD_DIR=build-jetson kas build kas-jetson.yml
+
+**QEMU**
+
+    KAS_BUILD_DIR=build-qemu kas build kas-qemu.yml
+
+See `docs/DEVGUIDE.md` for full build, flash, and run instructions.
+
+## Hardware
+
+| Target | Display Output | Notes |
+|--------|---------------|-------|
+| Raspberry Pi 4 Model B | DSI LCD (Waveshare 4.3" 800x480) or HDMI | Boots from USB stick |
+| Jetson Orin Nano Dev Kit 8GB | HDMI via Weston compositor | Custom Yocto + meta-tegra |
+| QEMU (qemuarm64) | GTK window via virtio-gpu | Runs on WSL2 (Windows 11) |
+
+## Dependencies
+
+The following repositories must be cloned separately by kas:
+
+- [poky](https://git.yoctoproject.org/poky) — scarthgap
+- [meta-raspberrypi](https://github.com/agherzan/meta-raspberrypi) — scarthgap
+- [meta-openembedded](https://github.com/openembedded/meta-openembedded) — scarthgap
+- [meta-tegra](https://github.com/OE4T/meta-tegra) — Jetson target only
+
+Build tool: [kas](https://kas.readthedocs.io/) 5.3
+
+## Documentation
+
+| File | Description |
+|------|-------------|
+| `docs/dev-guide.md` | Build, flash, and run instructions for all targets |
+| `docs/signing.md` | ECDSA key generation and config signing workflow |

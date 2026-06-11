@@ -11,13 +11,13 @@ with an unsigned or tampered config.
 
 ## How it works
 
-![](safemon_signing_workflow.svg)
+![](signing_workflow.svg)
 
 ---
 
 ## One-time setup
 
-![](safemon_onetime_setup.svg)
+![](signing_onetime_setup.svg)
 
 ### 1. Generate a key pair
 
@@ -87,7 +87,7 @@ python3 safemon/tools/safemon-sign/safemon_sign.py verify \
 
 ## File locations
 
-![](safemon_key_files.svg)
+![](signing_key_files.svg)
 
 | File | Location | Notes |
 |------|----------|-------|
