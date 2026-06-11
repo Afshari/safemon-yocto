@@ -38,6 +38,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon.pub \
            file://safemon-app.service \
            file://safemon-display.service \
+           file://safemon-display-jetson.service \
            file://safemon/src/grpc_server.cpp \
            file://safemon/inc/grpc_server.h \
            file://safemon/proto/fault.proto \
@@ -79,8 +80,15 @@ do_install:append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/safemon-app.service \
         ${D}${systemd_system_unitdir}/safemon-app.service
-    install -m 0644 ${WORKDIR}/safemon-display.service \
-        ${D}${systemd_system_unitdir}/safemon-display.service
+    
+    # Install platform-specific display service
+    if [ "${MACHINE}" = "jetson-orin-nano-devkit" ]; then
+        install -m 0644 ${WORKDIR}/safemon-display-jetson.service \
+            ${D}${systemd_system_unitdir}/safemon-display.service
+    else
+        install -m 0644 ${WORKDIR}/safemon-display.service \
+            ${D}${systemd_system_unitdir}/safemon-display.service
+    fi
 }
 
 FILES:${PN} += "${bindir}/safemon-app \
