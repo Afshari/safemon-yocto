@@ -15,7 +15,8 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/gl_app.cpp \
            file://safemon/src/safemon_display.cpp \
            file://safemon/src/drm_helper.cpp \
-           file://safemon/src/egl_helper.cpp \
+           file://safemon/src/egl_helper_gbm.cpp \
+           file://safemon/src/egl_helper_wayland.cpp \
            file://safemon/src/fault_detector.cpp \
            file://safemon/src/config.cpp \
            file://safemon/inc/drm_helper.h \
@@ -37,6 +38,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon.pub \
            file://safemon-app.service \
            file://safemon-display.service \
+           file://safemon-display-jetson.service \
            file://safemon/src/grpc_server.cpp \
            file://safemon/inc/grpc_server.h \
            file://safemon/proto/fault.proto \
@@ -49,8 +51,16 @@ SRC_URI = "file://safemon/CMakeLists.txt \
 S = "${WORKDIR}/safemon"
 
 inherit cmake systemd
+# Default platform is rpi4
+EXTRA_OECMAKE = " -DPLATFORM=rpi4"
+# Override for Jetson
+EXTRA_OECMAKE:jetson-orin-nano-devkit = " -DPLATFORM=jetson"
 
-DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl mesa gmp openssl grpc protobuf"
+DEPENDS = "hiredis pkgconfig libdrm virtual/libgles2 virtual/egl gmp openssl grpc protobuf"
+# RPi4 needs Mesa/GBM
+DEPENDS:append:raspberrypi4-64 = " mesa"
+# Jetson needs Wayland
+DEPENDS:append:jetson-orin-nano-devkit = " wayland wayland-native wayland-protocols"
 
 SYSTEMD_SERVICE:${PN} = "safemon-app.service safemon-display.service"
 SYSTEMD_AUTO_ENABLE:${PN} = "enable"
@@ -70,8 +80,15 @@ do_install:append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/safemon-app.service \
         ${D}${systemd_system_unitdir}/safemon-app.service
-    install -m 0644 ${WORKDIR}/safemon-display.service \
-        ${D}${systemd_system_unitdir}/safemon-display.service
+    
+    # Install platform-specific display service
+    if [ "${MACHINE}" = "jetson-orin-nano-devkit" ]; then
+        install -m 0644 ${WORKDIR}/safemon-display-jetson.service \
+            ${D}${systemd_system_unitdir}/safemon-display.service
+    else
+        install -m 0644 ${WORKDIR}/safemon-display.service \
+            ${D}${systemd_system_unitdir}/safemon-display.service
+    fi
 }
 
 FILES:${PN} += "${bindir}/safemon-app \

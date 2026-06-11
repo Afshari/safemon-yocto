@@ -16,6 +16,12 @@ import os
 import grpc
 from datetime import datetime
 
+SCRIPT_NAME = "fault_client.py"
+SCRIPT_DESC = (
+    "Safemon gRPC fault streaming client. "
+    "Connects to a running safemon-app instance and prints live fault events."
+)
+
 # Add proto directory to path
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROTO_DIR  = os.path.join(SCRIPT_DIR, '..', '..', 'proto')
@@ -91,7 +97,17 @@ def run(host, port, verbose):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='fault-client -- safemon gRPC fault streaming client'
+        prog=SCRIPT_NAME,
+        description=SCRIPT_DESC,
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=(
+            "Required parameter:\n"
+            "  --host    IP address or hostname of the target device\n\n"
+            "Examples:\n"
+            f"  python {SCRIPT_NAME} --host 192.168.1.42\n"
+            f"  python {SCRIPT_NAME} --host 192.168.1.42 --verbose\n"
+            f"  python {SCRIPT_NAME} --host 192.168.1.42 --port 50051\n"
+        )
     )
     parser.add_argument('--host',    required=True,
                         help='Device IP address (e.g. 192.168.1.42)')

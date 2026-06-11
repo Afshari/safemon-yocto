@@ -62,6 +62,21 @@ sudo apt-get install -y \
 sudo usermod -aG docker $USER
 
 # ---------------------------------------------------------------------------
+# kas (Yocto build tool)
+# ---------------------------------------------------------------------------
+echo "[INFO] Installing kas..."
+pip3 install kas==5.3
+echo 'export PATH=$HOME/.local/bin:$PATH' >> ~/.bashrc
+export PATH=$HOME/.local/bin:$PATH
+
+# ---------------------------------------------------------------------------
+# AppArmor fix (required for BitBake on Ubuntu 24.04)
+# ---------------------------------------------------------------------------
+echo "[INFO] Applying AppArmor fix for BitBake..."
+echo 'kernel.apparmor_restrict_unprivileged_userns=0' | sudo tee /etc/sysctl.d/99-bitbake.conf
+sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+
+# ---------------------------------------------------------------------------
 # SSH key for GitHub (hint only)
 # ---------------------------------------------------------------------------
 echo ""
@@ -80,6 +95,7 @@ echo -n "  Docker:         "; docker --version
 echo -n "  Docker Compose: "; docker compose version
 echo -n "  Python3:        "; python3 --version
 echo -n "  cmake:          "; cmake --version | head -1
+echo -n "  kas:            "; ~/.local/bin/kas --version
 
 echo ""
 echo "[INFO] Setup complete!"
@@ -87,7 +103,7 @@ echo "[WARN] Log out and back in for docker group changes to take effect."
 echo "[INFO] Then run:"
 echo "  git clone git@github.com:Afshari/safemon-yocto.git"
 echo "  cd safemon-yocto"
-echo "  git checkout feature/ecdsa-grpc"
-echo "  cd safemon/lib/ecdsa"
-echo "  docker compose build"
-echo "  docker compose run ecdsa-test"
+echo "  kas build kas-rpi4.yml"
+echo ""
+echo "  To build for Jetson:"
+echo "  KAS_BUILD_DIR=build-jetson kas build kas-jetson.yml"

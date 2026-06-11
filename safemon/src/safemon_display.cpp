@@ -11,7 +11,7 @@
 #include "egl_helper.h"
 #include "gl_app.h"
 #include "config.h"
-#include "fault_detector.h"
+#include "ecdsa_verify_file.h"
 
 struct DisplayState {
     std::string last_frame  = "---";
@@ -29,12 +29,27 @@ int main() {
 
     SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
 
+    // Verify config signature before proceeding
+    if (!ecdsa::verify_file("/etc/safemon/safemon.conf",
+                            "/etc/safemon/pki/safemon.pub"))
+    {
+        std::cerr << "[startup] Config verification failed -- aborting\n";
+        return 1;
+    }
+
     // DRM init
+#ifndef PLATFORM_JETSON
     DrmState drm;
     if (!drm_open(drm, cfg)) return 1;
-
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
+#else
+    // On Jetson, Weston owns the display - use fixed resolution
+    // Update these values if your monitor is different
+    DrmState drm;  // kept for cleanup compatibility, not used for display
+    uint32_t W = 1920;
+    uint32_t H = 1080;
+#endif
 
     // EGL init
     EglContext egl;
@@ -51,8 +66,10 @@ int main() {
     else
         std::cout << "[redis] Connected\n";
 
+#ifndef PLATFORM_JETSON
     gbm_bo*  prev_bo    = nullptr;
     uint32_t prev_fb_id = 0;
+#endif
 
     glViewport(0, 0, W, H);
 
@@ -62,9 +79,6 @@ int main() {
     GLuint font_tex  = build_font_texture();    
 
     while (g_running) {
-        // Clear to dark background
-        glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         // Read from Redis
         DisplayState state;
@@ -86,12 +100,16 @@ int main() {
         }
 
         // Read fault status
-        std::string fault_status = "UNKNOWN";
-        redisReply* fault = (redisReply*)redisCommand(redis,
-                            "GET safemon:faults:current");
-        if (fault && fault->type == REDIS_REPLY_STRING)
-            fault_status = std::string(fault->str, fault->len);
-        if (fault) freeReplyObject(fault);
+        std::string fault_status = "APP DOWN";
+        if (redis_ok) {
+            redisReply* fault = (redisReply*)redisCommand(redis,
+                                "GET safemon:faults:current");
+            if (fault && fault->type == REDIS_REPLY_STRING)
+                fault_status = std::string(fault->str, fault->len);
+            else
+                fault_status = "APP DOWN";
+            if (fault) freeReplyObject(fault);
+        }
 
         // Draw
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
@@ -143,6 +161,8 @@ int main() {
             { fr = 0.0f; fg = 1.0f; fb = 0.0f; }  // green
         else if (fault_status.substr(0, 4) == "WARN")
             { fr = 1.0f; fg = 0.8f; fb = 0.0f; }  // yellow
+        else if (fault_status.substr(0, 7) == "APP DOWN")
+            { fr = 0.5f; fg = 0.0f; fb = 0.5f; }       // purple - app not running
         else
             { fr = 1.0f; fg = 0.0f; fb = 0.0f; }  // red
 
@@ -159,6 +179,7 @@ int main() {
 
         eglSwapBuffers(egl.dpy, egl.surf);
 
+#ifndef PLATFORM_JETSON
         // GBM -> DRM
         gbm_bo* bo = gbm_surface_lock_front_buffer(egl.gbm_surf);
         if (!bo) break;
@@ -180,15 +201,18 @@ int main() {
         }
         prev_bo    = bo;
         prev_fb_id = fb_id;
+#endif // PLATFORM_JETSON
 
         sleep(1);
     }
 
     // Cleanup
+#ifndef PLATFORM_JETSON
     if (prev_bo) {
         drmModeRmFB(drm.fd, prev_fb_id);
         gbm_surface_release_buffer(egl.gbm_surf, prev_bo);
     }
+#endif
     glDeleteProgram(rect_prog);
     glDeleteProgram(text_prog);
     glDeleteTextures(1, &font_tex);

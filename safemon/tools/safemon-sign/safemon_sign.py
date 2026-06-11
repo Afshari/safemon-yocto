@@ -22,6 +22,8 @@ import json
 import os
 import sys
 
+SCRIPT_NAME = "safemon_sign.py"
+
 # ---------------------------------------------------------------------------
 # secp256k1 curve parameters
 # ---------------------------------------------------------------------------
@@ -299,22 +301,74 @@ def cmd_verify(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='safemon-sign -- ECDSA file signing tool'
+        prog=SCRIPT_NAME,
+        description="Safemon ECDSA signing tool.",
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=(
+            "Run '<command> --help' for detailed usage.\n"
+            "Examples:\n"
+            "  python3 safemon_sign.py keygen --help\n"
+            "  python3 safemon_sign.py sign --help\n"
+            "  python3 safemon_sign.py verify --help\n"
+        )
     )
     sub = parser.add_subparsers(dest='command', required=True)
 
     # keygen
-    p_keygen = sub.add_parser('keygen', help='Generate a secp256k1 key pair')
+    p_keygen = sub.add_parser(
+        'keygen',
+        help='Generate a secp256k1 key pair',
+        description='Generate a safemon secp256k1 private/public key pair.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=(
+            "What it creates:\n"
+            "  - Private key JSON file at --out\n"
+            "  - Public key JSON file next to it with .pub extension\n\n"
+            "Example:\n"
+            "  python3 safemon_sign.py keygen --out ~/.safemon/safemon.key\n"
+        )
+    )
     p_keygen.add_argument('--out', required=True,
                           help='Output path for private key (e.g. ~/.safemon/safemon.key)')
 
     # sign
-    p_sign = sub.add_parser('sign', help='Sign a file')
-    p_sign.add_argument('--key',  required=True, help='Path to private key JSON file')
+    p_sign = sub.add_parser(
+        'sign',
+        help='Sign a file',
+        description='Sign a safemon config or calibration file using a private key.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=(
+            "Output:\n"
+            "  Creates a signature file next to the input file:\n"
+            "  <filename>.sig\n\n"
+            "Example:\n"
+            "  python3 safemon_sign.py sign --key ~/.safemon/safemon.key --file safemon.conf\n"
+        )
+    )
+    p_sign.add_argument('--key', required=True, help='Path to private key JSON file')
     p_sign.add_argument('--file', required=True, help='File to sign')
 
     # verify
-    p_verify = sub.add_parser('verify', help='Verify a file signature')
+    p_verify = sub.add_parser(
+        'verify',
+        help='Verify a file signature',
+        description='Verify a file signature using a safemon public key.',
+        formatter_class=argparse.RawTextHelpFormatter,
+        epilog=(
+            "Checks:\n"
+            "  - Signature file (.sig)\n"
+            "  - Target file contents\n"
+            "  - Public key\n\n"
+            "Returns:\n"
+            "  [OK]   Signature is valid\n"
+            "  [FAIL] Signature is invalid\n\n"
+            "Example:\n"
+            "  python3 safemon_sign.py verify \\\n"
+            "      --pub safemon.pub \\\n"
+            "      --file safemon.conf \\\n"
+            "      --sig safemon.conf.sig\n"
+        )
+    )
     p_verify.add_argument('--pub',  required=True, help='Path to public key JSON file')
     p_verify.add_argument('--file', required=True, help='File to verify')
     p_verify.add_argument('--sig',  required=True, help='Signature file (.sig)')
