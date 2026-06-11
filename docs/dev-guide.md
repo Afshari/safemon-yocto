@@ -5,6 +5,7 @@
 - [Prerequisites](#prerequisites)
 - [Repository Structure](#repository-structure)
 - [AWS Instance Setup](#aws-instance-setup)
+- [Scripts Reference](#scripts-reference)
 - [Building Images](#building-images)
 - [Flashing](#flashing)
 - [Device Access](#device-access)
@@ -65,6 +66,39 @@ One-time AppArmor fix required on Ubuntu 24.04 before running kas:
 To make it permanent:
 
     echo 'kernel.apparmor_restrict_unprivileged_userns=0' | sudo tee /etc/sysctl.d/99-bitbake.conf
+
+---
+
+## Scripts Reference
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/setup-aws.sh` | One-time setup for a fresh Ubuntu 24.04 AWS instance |
+| `scripts/cross-compile-rpi4.sh` | Cross-compile a single binary for Raspberry Pi 4 |
+| `scripts/cross-compile-jetson.sh` | Cross-compile a single binary for Jetson Orin Nano |
+
+### Cross-compiling a single binary
+
+Use this during development to rebuild and deploy one binary without a full image build.
+
+**Raspberry Pi 4**
+
+    ./scripts/cross-compile-rpi4.sh safemon-app
+    ./scripts/cross-compile-rpi4.sh safemon-display
+
+    scp out/safemon-app root@PI_IP:/usr/bin/
+    ssh root@PI_IP "systemctl restart safemon-app.service"
+
+**Jetson Orin Nano**
+
+    ./scripts/cross-compile-jetson.sh safemon-app
+    ./scripts/cross-compile-jetson.sh safemon-display
+
+    scp out/safemon-app-jetson root@jetson-orin-nano-devkit.local:/usr/bin/safemon-app
+    ssh root@jetson-orin-nano-devkit.local "systemctl restart safemon-app.service"
+
+Note: cross-compile requires a completed `kas build` first -- the scripts use the
+sysroot from the build directory.
 
 ---
 
