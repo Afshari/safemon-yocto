@@ -11,7 +11,7 @@
 #include "egl_helper.h"
 #include "gl_app.h"
 #include "config.h"
-#include "fault_detector.h"
+#include "ecdsa_verify_file.h"
 
 struct DisplayState {
     std::string last_frame  = "---";
@@ -28,6 +28,14 @@ int main() {
     std::signal(SIGTERM, signal_handler);
 
     SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
+
+    // Verify config signature before proceeding
+    if (!ecdsa::verify_file("/etc/safemon/safemon.conf",
+                            "/etc/safemon/pki/safemon.pub"))
+    {
+        std::cerr << "[startup] Config verification failed -- aborting\n";
+        return 1;
+    }
 
     // DRM init
 #ifndef PLATFORM_JETSON
@@ -71,9 +79,6 @@ int main() {
     GLuint font_tex  = build_font_texture();    
 
     while (g_running) {
-        // Clear to dark background
-        glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
 
         // Read from Redis
         DisplayState state;
@@ -95,12 +100,16 @@ int main() {
         }
 
         // Read fault status
-        std::string fault_status = "UNKNOWN";
-        redisReply* fault = (redisReply*)redisCommand(redis,
-                            "GET safemon:faults:current");
-        if (fault && fault->type == REDIS_REPLY_STRING)
-            fault_status = std::string(fault->str, fault->len);
-        if (fault) freeReplyObject(fault);
+        std::string fault_status = "APP DOWN";
+        if (redis_ok) {
+            redisReply* fault = (redisReply*)redisCommand(redis,
+                                "GET safemon:faults:current");
+            if (fault && fault->type == REDIS_REPLY_STRING)
+                fault_status = std::string(fault->str, fault->len);
+            else
+                fault_status = "APP DOWN";
+            if (fault) freeReplyObject(fault);
+        }
 
         // Draw
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
@@ -152,6 +161,8 @@ int main() {
             { fr = 0.0f; fg = 1.0f; fb = 0.0f; }  // green
         else if (fault_status.substr(0, 4) == "WARN")
             { fr = 1.0f; fg = 0.8f; fb = 0.0f; }  // yellow
+        else if (fault_status.substr(0, 7) == "APP DOWN")
+            { fr = 0.5f; fg = 0.0f; fb = 0.5f; }       // purple - app not running
         else
             { fr = 1.0f; fg = 0.0f; fb = 0.0f; }  // red
 
