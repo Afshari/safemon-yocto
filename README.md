@@ -6,13 +6,15 @@ a live status dashboard using OpenGL ES. Designed around ISO 26262 principles.
 
 ## Table of Contents
 
-- [Supported Targets](#supported-targets)
-- [System Architecture](#system-architecture)
-- [Repository Structure](#repository-structure)
-- [Quick Start](#quick-start)
-- [Hardware](#hardware)
-- [Dependencies](#dependencies)
-- [Documentation](#documentation)
+- [safemon](#safemon)
+  - [Table of Contents](#table-of-contents)
+  - [Supported Targets](#supported-targets)
+  - [System Architecture](#system-architecture)
+  - [Repository Structure](#repository-structure)
+  - [Quick Start](#quick-start)
+  - [Hardware](#hardware)
+  - [Dependencies](#dependencies)
+  - [Documentation](#documentation)
 
 ## Supported Targets
 
@@ -26,7 +28,10 @@ a live status dashboard using OpenGL ES. Designed around ISO 26262 principles.
 
 ## System Architecture
 
-Architecture diagram coming soon — see `docs/` for SVG diagrams.
+![safemon-display pipeline](docs/assets/display_pipeline.svg)
+
+See [docs/spec-graphics.md](docs/spec-graphics.md) for the full display
+pipeline, connector selection logic, and HDMI/DSI configuration details.
 
 The full pipeline:
 
