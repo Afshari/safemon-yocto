@@ -45,6 +45,7 @@ BASE_FLAGS="\
   -std=c++17 \
   -DPLATFORM_JETSON \
   -I$SYSROOT/usr/include \
+  -I$SYSROOT/usr/include/drm \
   -L$SYSROOT/usr/lib"
 
 ECDSA_SRC="\
@@ -84,17 +85,34 @@ ABSEIL_LIBS="\
   -labsl_demangle_internal -labsl_stacktrace -labsl_symbolize \
   -labsl_strerror -labsl_throw_delegate"
 
+XDG_SHELL_XML="$SYSROOT/usr/share/wayland-protocols/stable/xdg-shell/xdg-shell.xml"
+XDG_SHELL_HEADER="$REPO_ROOT/out/xdg-shell-client-protocol.h"
+XDG_SHELL_SRC="$REPO_ROOT/out/xdg-shell-protocol.c"
+XDG_SHELL_OBJ="$REPO_ROOT/out/xdg-shell-protocol.o"
+
+if [ "$TARGET" = "safemon-display" ]; then
+    if [ ! -f "$XDG_SHELL_XML" ]; then
+        echo "[cross-compile] ERROR: xdg-shell.xml not found at $XDG_SHELL_XML"
+        exit 1
+    fi
+    wayland-scanner client-header "$XDG_SHELL_XML" "$XDG_SHELL_HEADER"
+    wayland-scanner private-code  "$XDG_SHELL_XML" "$XDG_SHELL_SRC"
+    aarch64-poky-linux-gcc --sysroot=$SYSROOT -c "$XDG_SHELL_SRC" -I "$REPO_ROOT/out" -o "$XDG_SHELL_OBJ"
+fi
+
 case $TARGET in
   safemon-display)
     aarch64-poky-linux-g++ $BASE_FLAGS \
-      -lEGL -lGLESv2 -lwayland-client -lwayland-egl -lhiredis -lgmp -lcrypto \
+      -lEGL -lGLESv2 -lwayland-client -lwayland-egl -ldrm -lhiredis -lgmp -lcrypto \
       safemon/src/drm_helper.cpp \
       safemon/src/egl_helper_wayland.cpp \
       safemon/src/safemon_display.cpp \
       safemon/src/gl_app.cpp \
+      "$XDG_SHELL_OBJ" \
       $CONFIG_SRC \
       $ECDSA_SRC \
       -I safemon/inc \
+      -I "$REPO_ROOT/out" \
       $CONFIG_INC \
       $ECDSA_INC \
       -o "$REPO_ROOT/out/$TARGET-jetson"

@@ -139,6 +139,58 @@ Output: `build-qemu/tmp/deploy/images/qemuarm64/`
 
 ---
 
+## Useful kas / BitBake Commands
+
+### Interactive shell inside the build environment
+
+    kas shell kas-rpi4.yml
+
+This drops you into a BitBake shell with all environment variables set --
+useful for running `bitbake` commands directly.
+
+### Rebuild a single recipe
+
+    kas shell kas-rpi4.yml -c "bitbake safemon-app"
+
+Force a clean rebuild of just that recipe:
+
+    kas shell kas-rpi4.yml -c "bitbake safemon-app -c cleansstate"
+    kas shell kas-rpi4.yml -c "bitbake safemon-app"
+
+### Inspect a recipe
+
+Show all variables and their final computed values for a recipe:
+
+    kas shell kas-rpi4.yml -c "bitbake -e safemon-app"
+
+Show only a specific variable (e.g. SRC_URI):
+
+    kas shell kas-rpi4.yml -c "bitbake -e safemon-app" | grep ^SRC_URI=
+
+Show the dependency tree for a recipe:
+
+    kas shell kas-rpi4.yml -c "bitbake -g safemon-app"
+
+This generates `task-depends.dot`, `pn-depends.dot`, and `pn-buildlist`
+in the current directory.
+
+### Check recipe build status
+
+    kas shell kas-rpi4.yml -c "bitbake-layers show-recipes safemon-app"
+
+### View build logs for a failed task
+
+If a task fails, BitBake prints the log path. To find it manually:
+
+    find build/tmp/work -path "*safemon-app*/temp/log.do_compile*"
+
+### Clean and rebuild from scratch
+
+    kas shell kas-rpi4.yml -c "bitbake safemon-app -c cleanall"
+    kas build kas-rpi4.yml
+
+---
+
 ## Flashing
 
 ### Raspberry Pi 4
@@ -219,6 +271,14 @@ Find RPi4 IP:
 All reusable libraries live under `safemon/lib/`. They build and test
 independently from the Yocto image -- no cross-compiler or device needed.
 
+Current libraries:
+
+| Library | Description |
+|---------|-------------|
+| `ecdsa` | secp256k1 ECDSA sign/verify |
+| `config` | Parses `safemon.conf` into a `SafemonConfig` struct |
+| `fault_detector` | Fault evaluation rules (timeout, unknown ID) and Redis-backed detector |
+
 ### Build the Docker image
 
     cd safemon/lib
@@ -234,16 +294,30 @@ independently from the Yocto image -- no cross-compiler or device needed.
 
 ### Inside the container
 
+    # Build (first time, or after CMakeLists changes)
+    cmake -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build --parallel $(nproc)
+
     # Re-run all tests
     ctest --test-dir build --output-on-failure
 
-    # Run test binary directly
-    ./build/ecdsa/test/ecdsa_tests
+    # Run tests for one library only
+    ctest --test-dir build --output-on-failure -R config
+    ctest --test-dir build --output-on-failure -R fault
+    ctest --test-dir build --output-on-failure -R ecdsa
 
-    # Run a single test
+    # List all discovered tests without running them
+    ctest --test-dir build -N
+
+    # Run a test binary directly for full gtest output
+    ./build/ecdsa/test/ecdsa_tests
+    ./build/config/test/config_tests
+    ./build/fault_detector/test/fault_detector_tests
+
+    # Run a single test by name
     ./build/ecdsa/test/ecdsa_tests --gtest_filter=ECDSA.VerifyValidSignature
 
-    # List all tests
+    # List all tests in a binary
     ./build/ecdsa/test/ecdsa_tests --gtest_list_tests
 
     # Rebuild after editing source
