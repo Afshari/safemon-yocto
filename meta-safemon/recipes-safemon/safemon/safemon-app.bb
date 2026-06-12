@@ -5,6 +5,8 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 FILESEXTRAPATHS:prepend := "${TOPDIR}/../:"
 
 SRC_URI = "file://safemon/CMakeLists.txt \
+           file://safemon/cmake/dependencies.cmake \
+           file://safemon/cmake/platform.cmake \
            file://safemon/src/main.cpp \
            file://safemon/src/can_reader.cpp \
            file://safemon/inc/can_reader.h \
@@ -17,13 +19,10 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/drm_helper.cpp \
            file://safemon/src/egl_helper_gbm.cpp \
            file://safemon/src/egl_helper_wayland.cpp \
-           file://safemon/src/fault_detector.cpp \
-           file://safemon/src/config.cpp \
            file://safemon/inc/drm_helper.h \
            file://safemon/inc/egl_helper.h \
            file://safemon/inc/gl_app.h \
-           file://safemon/inc/fault_detector.h \
-           file://safemon/inc/config.h \
+           file://safemon/lib/CMakeLists.txt \
            file://safemon/lib/ecdsa/src/bigint.cpp \
            file://safemon/lib/ecdsa/src/ec_point.cpp \
            file://safemon/lib/ecdsa/src/ecdsa.cpp \
@@ -33,6 +32,14 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/ecdsa/inc/ecdsa.h \
            file://safemon/lib/ecdsa/inc/ecdsa_verify_file.h \
            file://safemon/lib/ecdsa/CMakeLists.txt \
+           file://safemon/lib/config/src/config.cpp \
+           file://safemon/lib/config/inc/config.h \
+           file://safemon/lib/config/CMakeLists.txt \
+           file://safemon/lib/fault_detector/src/fault_rules.cpp \
+           file://safemon/lib/fault_detector/src/fault_detector.cpp \
+           file://safemon/lib/fault_detector/inc/fault_rules.h \
+           file://safemon/lib/fault_detector/inc/fault_detector.h \
+           file://safemon/lib/fault_detector/CMakeLists.txt \
            file://safemon.conf \
            file://safemon.conf.sig \
            file://safemon.pub \

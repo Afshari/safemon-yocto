@@ -7,5 +7,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 enable_testing()
 
 add_subdirectory(ecdsa)
-# add_subdirectory(grpc)
-# add_subdirectory(redis)
+add_subdirectory(config)
+add_subdirectory(fault_detector)

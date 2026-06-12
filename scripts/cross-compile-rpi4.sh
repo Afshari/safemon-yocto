@@ -2,16 +2,16 @@
 set -e
 
 # ---------------------------------------------------------------------------
-# cross-compile.sh -- cross-compile a single target for Raspberry Pi 4
+# cross-compile-rpi4.sh -- cross-compile a single target for Raspberry Pi 4
 #
 # Usage:
-#   ./scripts/cross-compile.sh <target>
+#   ./scripts/cross-compile-rpi4.sh <target>
 #
 # Targets:
 #   egl-triangle, drm-display, safemon-display, safemon-app
 #
 # Override build dir (default: build):
-#   BUILD_DIR=build-rpi4 ./scripts/cross-compile.sh safemon-app
+#   BUILD_DIR=build-rpi4 ./scripts/cross-compile-rpi4.sh safemon-app
 # ---------------------------------------------------------------------------
 
 if [ -z "$1" ]; then
@@ -56,6 +56,14 @@ ECDSA_SRC="\
 
 ECDSA_INC="-I safemon/lib/ecdsa/inc"
 
+CONFIG_SRC="safemon/lib/config/src/config.cpp"
+CONFIG_INC="-I safemon/lib/config/inc"
+
+FAULT_SRC="\
+  safemon/lib/fault_detector/src/fault_rules.cpp \
+  safemon/lib/fault_detector/src/fault_detector.cpp"
+FAULT_INC="-I safemon/lib/fault_detector/inc"
+
 ABSEIL_LIBS="\
   -labsl_log_internal_check_op -labsl_log_initialize \
   -labsl_log_globals -labsl_log_entry -labsl_log_sink \
@@ -82,11 +90,12 @@ case $TARGET in
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lgbm -ldrm \
       safemon/src/drm_helper.cpp \
-      safemon/src/egl_helper.cpp \
+      safemon/src/egl_helper_gbm.cpp \
       safemon/src/gl_app.cpp \
-      safemon/src/config.cpp \
       safemon/src/egl_triangle.cpp \
+      $CONFIG_SRC \
       -I safemon/inc \
+      $CONFIG_INC \
       -o "$REPO_ROOT/out/$TARGET"
     ;;
   drm-display)
@@ -101,12 +110,13 @@ case $TARGET in
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lgbm -ldrm -lhiredis -lgmp -lcrypto \
       safemon/src/drm_helper.cpp \
-      safemon/src/egl_helper.cpp \
+      safemon/src/egl_helper_gbm.cpp \
       safemon/src/safemon_display.cpp \
       safemon/src/gl_app.cpp \
-      safemon/src/config.cpp \
+      $CONFIG_SRC \
       $ECDSA_SRC \
       -I safemon/inc \
+      $CONFIG_INC \
       $ECDSA_INC \
       -o "$REPO_ROOT/out/$TARGET"
     ;;
@@ -117,13 +127,15 @@ case $TARGET in
       $ABSEIL_LIBS \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
-      safemon/src/fault_detector.cpp \
-      safemon/src/config.cpp \
       safemon/src/grpc_server.cpp \
+      $CONFIG_SRC \
+      $FAULT_SRC \
       $ECDSA_SRC \
       safemon/proto/fault.pb.cc \
       safemon/proto/fault.grpc.pb.cc \
       -I safemon/inc \
+      $CONFIG_INC \
+      $FAULT_INC \
       $ECDSA_INC \
       -I safemon/proto \
       -o "$REPO_ROOT/out/$TARGET"

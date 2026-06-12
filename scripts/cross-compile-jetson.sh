@@ -55,6 +55,14 @@ ECDSA_SRC="\
 
 ECDSA_INC="-I safemon/lib/ecdsa/inc"
 
+CONFIG_SRC="safemon/lib/config/src/config.cpp"
+CONFIG_INC="-I safemon/lib/config/inc"
+
+FAULT_SRC="\
+  safemon/lib/fault_detector/src/fault_rules.cpp \
+  safemon/lib/fault_detector/src/fault_detector.cpp"
+FAULT_INC="-I safemon/lib/fault_detector/inc"
+
 ABSEIL_LIBS="\
   -labsl_log_internal_check_op -labsl_log_initialize \
   -labsl_log_globals -labsl_log_entry -labsl_log_sink \
@@ -84,9 +92,10 @@ case $TARGET in
       safemon/src/egl_helper_wayland.cpp \
       safemon/src/safemon_display.cpp \
       safemon/src/gl_app.cpp \
-      safemon/src/config.cpp \
+      $CONFIG_SRC \
       $ECDSA_SRC \
       -I safemon/inc \
+      $CONFIG_INC \
       $ECDSA_INC \
       -o "$REPO_ROOT/out/$TARGET-jetson"
     ;;
@@ -97,13 +106,15 @@ case $TARGET in
       $ABSEIL_LIBS \
       safemon/src/main.cpp \
       safemon/src/can_reader.cpp \
-      safemon/src/fault_detector.cpp \
-      safemon/src/config.cpp \
       safemon/src/grpc_server.cpp \
+      $CONFIG_SRC \
+      $FAULT_SRC \
       $ECDSA_SRC \
       safemon/proto/fault.pb.cc \
       safemon/proto/fault.grpc.pb.cc \
       -I safemon/inc \
+      $CONFIG_INC \
+      $FAULT_INC \
       $ECDSA_INC \
       -I safemon/proto \
       -o "$REPO_ROOT/out/$TARGET-jetson"
