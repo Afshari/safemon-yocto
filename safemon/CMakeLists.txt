@@ -19,14 +19,14 @@ set(PROTO_SRC
 # safemon-app
 # ---------------------------------------------------------------------------
 add_executable(safemon-app
-    src/can_reader.cpp
-    src/main.cpp
-    src/grpc_server.cpp
+    src/services/safemon_app.cpp
+    src/services/can_reader.cpp
+    src/services/grpc_server.cpp
     ${PROTO_SRC}
 )
 
 target_include_directories(safemon-app PRIVATE
-    inc
+    inc/services
     ${HIREDIS_INCLUDE}
     ${Protobuf_INCLUDE_DIRS}
     proto
@@ -43,15 +43,15 @@ target_link_libraries(safemon-app PRIVATE
 )
 
 # ---------------------------------------------------------------------------
-# drm-display
+# drm-display (legacy)
 # ---------------------------------------------------------------------------
 add_executable(drm-display
-    src/drm_display.cpp
-    src/framebuffer.cpp
+    src/legacy/drm_display.cpp
+    src/legacy/framebuffer.cpp
 )
 
 target_include_directories(drm-display PRIVATE
-    inc
+    inc/legacy
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
@@ -63,12 +63,12 @@ target_link_libraries(drm-display PRIVATE
 )
 
 # ---------------------------------------------------------------------------
-# egl-triangle
+# egl-triangle (legacy)
 # ---------------------------------------------------------------------------
 add_executable(egl-triangle
-    src/gl_app.cpp
-    src/egl_triangle.cpp
-    src/drm_helper.cpp
+    src/display/gl_app.cpp
+    src/legacy/egl_triangle.cpp
+    src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
 if(PLATFORM_DEPS_TARGET)
@@ -76,7 +76,7 @@ if(PLATFORM_DEPS_TARGET)
 endif()
 
 target_include_directories(egl-triangle PRIVATE
-    inc
+    inc/display
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
     ${DISPLAY_EXTRA_INCLUDES}
@@ -93,9 +93,9 @@ target_link_libraries(egl-triangle PRIVATE
 # safemon-display
 # ---------------------------------------------------------------------------
 add_executable(safemon-display
-    src/safemon_display.cpp
-    src/gl_app.cpp
-    src/drm_helper.cpp
+    src/display/safemon_display.cpp
+    src/display/gl_app.cpp
+    src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
 if(PLATFORM_DEPS_TARGET)
@@ -103,7 +103,7 @@ if(PLATFORM_DEPS_TARGET)
 endif()
 
 target_include_directories(safemon-display PRIVATE
-    inc
+    inc/display
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm

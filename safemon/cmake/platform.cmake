@@ -45,7 +45,7 @@ if(PLATFORM STREQUAL "jetson")
     )
 
     set(EGL_HELPER_SRC
-        src/egl_helper_wayland.cpp
+        src/display/egl_helper_wayland.cpp
         "${CMAKE_CURRENT_BINARY_DIR}/xdg-shell-protocol.c"
     )
     set(DISPLAY_EXTRA_LIBS ${WAYLAND_CLIENT_LIB} ${WAYLAND_EGL_LIB} ${DRM_LIB} xdg_shell_proto)
@@ -55,7 +55,7 @@ else()
     find_library(GBM_LIB gbm REQUIRED)
     find_path(GBM_INCLUDE gbm.h REQUIRED)
 
-    set(EGL_HELPER_SRC src/egl_helper_gbm.cpp)
+    set(EGL_HELPER_SRC src/display/egl_helper_gbm.cpp)
     set(DISPLAY_EXTRA_LIBS ${GBM_LIB} ${DRM_LIB})
     set(DISPLAY_EXTRA_INCLUDES ${GBM_INCLUDE} ${DRM_INCLUDE} ${DRM_INCLUDE}/drm)
     set(PLATFORM_DEPS_TARGET "")

@@ -7,21 +7,23 @@ FILESEXTRAPATHS:prepend := "${TOPDIR}/../:"
 SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/cmake/dependencies.cmake \
            file://safemon/cmake/platform.cmake \
-           file://safemon/src/main.cpp \
-           file://safemon/src/can_reader.cpp \
-           file://safemon/inc/can_reader.h \
-           file://safemon/src/drm_display.cpp \
-           file://safemon/src/framebuffer.cpp \
-           file://safemon/inc/framebuffer.h \
-           file://safemon/src/egl_triangle.cpp \
-           file://safemon/src/gl_app.cpp \
-           file://safemon/src/safemon_display.cpp \
-           file://safemon/src/drm_helper.cpp \
-           file://safemon/src/egl_helper_gbm.cpp \
-           file://safemon/src/egl_helper_wayland.cpp \
-           file://safemon/inc/drm_helper.h \
-           file://safemon/inc/egl_helper.h \
-           file://safemon/inc/gl_app.h \
+           file://safemon/src/services/safemon_app.cpp \
+           file://safemon/src/services/can_reader.cpp \
+           file://safemon/inc/services/can_reader.h \
+           file://safemon/src/services/grpc_server.cpp \
+           file://safemon/inc/services/grpc_server.h \
+           file://safemon/src/legacy/drm_display.cpp \
+           file://safemon/src/legacy/framebuffer.cpp \
+           file://safemon/inc/legacy/framebuffer.h \
+           file://safemon/src/legacy/egl_triangle.cpp \
+           file://safemon/src/display/gl_app.cpp \
+           file://safemon/src/display/safemon_display.cpp \
+           file://safemon/src/display/drm_helper.cpp \
+           file://safemon/src/display/egl_helper_gbm.cpp \
+           file://safemon/src/display/egl_helper_wayland.cpp \
+           file://safemon/inc/display/drm_helper.h \
+           file://safemon/inc/display/egl_helper.h \
+           file://safemon/inc/display/gl_app.h \
            file://safemon/lib/CMakeLists.txt \
            file://safemon/lib/ecdsa/src/bigint.cpp \
            file://safemon/lib/ecdsa/src/ec_point.cpp \
@@ -46,8 +48,6 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon-app.service \
            file://safemon-display.service \
            file://safemon-display-jetson.service \
-           file://safemon/src/grpc_server.cpp \
-           file://safemon/inc/grpc_server.h \
            file://safemon/proto/fault.proto \
            file://safemon/proto/fault.pb.cc \
            file://safemon/proto/fault.pb.h \
@@ -87,7 +87,7 @@ do_install:append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/safemon-app.service \
         ${D}${systemd_system_unitdir}/safemon-app.service
-    
+
     # Install platform-specific display service
     if [ "${MACHINE}" = "jetson-orin-nano-devkit" ]; then
         install -m 0644 ${WORKDIR}/safemon-display-jetson.service \
@@ -96,7 +96,12 @@ do_install:append() {
         install -m 0644 ${WORKDIR}/safemon-display.service \
             ${D}${systemd_system_unitdir}/safemon-display.service
     fi
+
+    # Build info
+    echo "Build date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > ${D}${sysconfdir}/safemon-build-info
+    echo "Machine: ${MACHINE}" >> ${D}${sysconfdir}/safemon-build-info
 }
+
 
 FILES:${PN} += "${bindir}/safemon-app \
                 ${bindir}/drm-display \
@@ -105,5 +110,6 @@ FILES:${PN} += "${bindir}/safemon-app \
                 ${sysconfdir}/safemon/safemon.conf \
                 ${sysconfdir}/safemon/safemon.conf.sig \
                 ${sysconfdir}/safemon/pki/safemon.pub \
+                ${sysconfdir}/safemon-build-info \
                 ${systemd_system_unitdir}/safemon-app.service \
                 ${systemd_system_unitdir}/safemon-display.service"
