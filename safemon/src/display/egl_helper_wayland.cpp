@@ -29,8 +29,16 @@ static const xdg_surface_listener xdg_surface_listener_impl = {
 // ------------------------------------------------------------
 // xdg_toplevel handlers
 // ------------------------------------------------------------
-static void xdg_toplevel_configure(void*, xdg_toplevel*,
-                                   int32_t, int32_t, wl_array*) {}
+static void xdg_toplevel_configure(void* data, xdg_toplevel*,
+                                   int32_t width, int32_t height, wl_array*)
+{
+    EglContext* e = static_cast<EglContext*>(data);
+    if (width > 0 && height > 0) {
+        e->configured_width  = static_cast<uint32_t>(width);
+        e->configured_height = static_cast<uint32_t>(height);
+    }
+}
+
 static void xdg_toplevel_close(void*, xdg_toplevel*) {}
 
 static const xdg_toplevel_listener xdg_toplevel_listener_impl = {
@@ -94,14 +102,19 @@ bool egl_init(EglContext& e, int /*drm_fd*/, uint32_t W, uint32_t H)
     xdg_surface_add_listener(e.xdg_surf, &xdg_surface_listener_impl, nullptr);
 
     e.xdg_top = xdg_surface_get_toplevel(e.xdg_surf);
-    xdg_toplevel_add_listener(e.xdg_top, &xdg_toplevel_listener_impl, nullptr);
+    xdg_toplevel_add_listener(e.xdg_top, &xdg_toplevel_listener_impl, &e);
     xdg_toplevel_set_title(e.xdg_top, "safemon");
     xdg_toplevel_set_fullscreen(e.xdg_top, nullptr);
 
     wl_surface_commit(e.wl_surf);
     wl_display_roundtrip(e.wl_dpy);
 
-    e.wl_win = wl_egl_window_create(e.wl_surf, W, H);
+    uint32_t actual_w = (e.configured_width  > 0) ? e.configured_width  : W;
+    uint32_t actual_h = (e.configured_height > 0) ? e.configured_height : H;
+    e.width  = actual_w;
+    e.height = actual_h;
+
+    e.wl_win = wl_egl_window_create(e.wl_surf, actual_w, actual_h);
     if (!e.wl_win) {
         std::cerr << "[wl] wl_egl_window_create failed\n"; return false;
     }
@@ -157,7 +170,7 @@ bool egl_init(EglContext& e, int /*drm_fd*/, uint32_t W, uint32_t H)
     }
 
     eglMakeCurrent(e.dpy, e.surf, e.surf, e.ctx);
-    std::cout << "[egl] EGL surface ready (" << W << "x" << H << ")\n";
+    std::cout << "[egl] EGL surface ready (" << actual_w << "x" << actual_h << ")\n";
     return true;
 }
 

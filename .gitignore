@@ -3,6 +3,7 @@ build-rpi4/
 build-qemu/
 build-jetson/
 build/
+notes/
 
 # Yocto downloads cache
 downloads/

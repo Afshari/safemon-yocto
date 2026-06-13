@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     libgmp-dev \
     libssl-dev \
     libgtest-dev \
+    libhiredis-dev \
     vim \
     && rm -rf /var/lib/apt/lists/*
 

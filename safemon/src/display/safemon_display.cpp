@@ -37,15 +37,13 @@ int main() {
         return 1;
     }
 
-    // DRM init
+// DRM init
 #ifndef PLATFORM_JETSON
     DrmState drm;
     if (!drm_open(drm, cfg)) return 1;
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
 #else
-    // On Jetson, Weston owns the display - use fixed resolution
-    // Update these values if your monitor is different
     DrmState drm;  // kept for cleanup compatibility, not used for display
     uint32_t W = 1920;
     uint32_t H = 1080;
@@ -54,6 +52,11 @@ int main() {
     // EGL init
     EglContext egl;
     if (!egl_init(egl, drm.fd, W, H)) return 1;
+
+#ifdef PLATFORM_JETSON
+    W = egl.width;
+    H = egl.height;
+#endif
 
     std::cout << "[gl-display] version: foundation\n";
     std::cout << "[gl-display] Running. Ctrl+C to exit.\n";

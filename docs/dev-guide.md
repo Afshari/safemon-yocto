@@ -2,16 +2,38 @@
 
 ## Table of Contents
 
-- [Prerequisites](#prerequisites)
-- [Repository Structure](#repository-structure)
-- [AWS Instance Setup](#aws-instance-setup)
-- [Scripts Reference](#scripts-reference)
-- [Building Images](#building-images)
-- [Flashing](#flashing)
-- [Device Access](#device-access)
-- [Working with the lib/ Layer](#working-with-the-lib-layer)
-- [Adding a New Library](#adding-a-new-library)
-- [Commit Message Convention](#commit-message-convention)
+- [Developer Guide](#developer-guide)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Repository Structure](#repository-structure)
+  - [AWS Instance Setup](#aws-instance-setup)
+  - [Scripts Reference](#scripts-reference)
+    - [Cross-compiling a single binary](#cross-compiling-a-single-binary)
+  - [Building Images](#building-images)
+  - [Useful kas / BitBake Commands](#useful-kas--bitbake-commands)
+    - [Interactive shell inside the build environment](#interactive-shell-inside-the-build-environment)
+    - [Rebuild a single recipe](#rebuild-a-single-recipe)
+    - [Inspect a recipe](#inspect-a-recipe)
+    - [Check recipe build status](#check-recipe-build-status)
+    - [View build logs for a failed task](#view-build-logs-for-a-failed-task)
+    - [Clean and rebuild from scratch](#clean-and-rebuild-from-scratch)
+  - [Flashing](#flashing)
+    - [Raspberry Pi 4](#raspberry-pi-4)
+    - [Jetson Orin Nano](#jetson-orin-nano)
+    - [QEMU](#qemu)
+  - [Device Access](#device-access)
+    - [SSH](#ssh)
+    - [Service Management](#service-management)
+    - [CAN Bus Testing](#can-bus-testing)
+    - [Redis](#redis)
+    - [gRPC Fault Client](#grpc-fault-client)
+  - [Working with the lib/ Layer](#working-with-the-lib-layer)
+    - [Build the Docker image](#build-the-docker-image)
+    - [Run all tests](#run-all-tests)
+    - [Interactive shell](#interactive-shell)
+    - [Inside the container](#inside-the-container)
+  - [Adding a New Library](#adding-a-new-library)
+  - [Commit Message Convention](#commit-message-convention)
 
 ---
 
@@ -124,40 +146,104 @@ Output: `build-qemu/tmp/deploy/images/qemuarm64/`
 
 ---
 
+## Useful kas / BitBake Commands
+
+### Interactive shell inside the build environment
+
+    kas shell kas-rpi4.yml
+
+This drops you into a BitBake shell with all environment variables set --
+useful for running `bitbake` commands directly.
+
+### Rebuild a single recipe
+
+    kas shell kas-rpi4.yml -c "bitbake safemon-app"
+
+Force a clean rebuild of just that recipe:
+
+    kas shell kas-rpi4.yml -c "bitbake safemon-app -c cleansstate"
+    kas shell kas-rpi4.yml -c "bitbake safemon-app"
+
+### Inspect a recipe
+
+Show all variables and their final computed values for a recipe:
+
+    kas shell kas-rpi4.yml -c "bitbake -e safemon-app"
+
+Show only a specific variable (e.g. SRC_URI):
+
+    kas shell kas-rpi4.yml -c "bitbake -e safemon-app" | grep ^SRC_URI=
+
+Show the dependency tree for a recipe:
+
+    kas shell kas-rpi4.yml -c "bitbake -g safemon-app"
+
+This generates `task-depends.dot`, `pn-depends.dot`, and `pn-buildlist`
+in the current directory.
+
+### Check recipe build status
+
+    kas shell kas-rpi4.yml -c "bitbake-layers show-recipes safemon-app"
+
+### View build logs for a failed task
+
+If a task fails, BitBake prints the log path. To find it manually:
+
+    find build/tmp/work -path "*safemon-app*/temp/log.do_compile*"
+
+### Clean and rebuild from scratch
+
+    kas shell kas-rpi4.yml -c "bitbake safemon-app -c cleanall"
+    kas build kas-rpi4.yml
+
+---
+
 ## Flashing
+
+After a successful build, find the image with:
+
+    ls -t build*/tmp/deploy/images/*/*.wic.bz2 build*/tmp/deploy/images/*/*.tegraflash.tar.gz 2>/dev/null | head -1
 
 ### Raspberry Pi 4
 
-Flash over SSH to the USB stick (boot device is `/dev/sda`, not `/dev/mmcblk0`):
+The image is located at:
 
-    pv image.wic.bz2 | bzcat | ssh root@PI_IP "dd of=/dev/sda bs=4M"
+    build/tmp/deploy/images/raspberrypi4-64/core-image-base-raspberrypi4-64.rootfs-<datetime>.wic.bz2
+
+This is a compressed disk image. Flash it to a microSD card or USB stick using any of the following tools:
+
+**Linux**
+
+Decompress and write directly with `bzcat` and `dd` (replace `/dev/sdX` with your target device -- double-check with `lsblk` first):
+
+    bzcat core-image-base-raspberrypi4-64.rootfs-<datetime>.wic.bz2 | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+
+Or use a graphical tool such as [GNOME Disks](https://wiki.gnome.org/Apps/Disks) or [Balena Etcher](https://etcher.balena.io/) (cross-platform).
+
+**Windows**
+
+Decompress the `.bz2` file (e.g. with [7-Zip](https://www.7-zip.org/)) to get the `.wic` file, then flash it with [Win32 Disk Imager](https://sourceforge.net/projects/win32diskimager/) or [Balena Etcher](https://etcher.balena.io/).
+
+**macOS**
+
+[Balena Etcher](https://etcher.balena.io/).
+
+After flashing, insert the card/stick into the Raspberry Pi 4 and power on.
 
 ### Jetson Orin Nano
 
-Flashing requires a powered USB hub and WSL2 with usbipd. Put the Jetson into
-recovery mode by shorting Pin 10 (REC) to Pin 9 (GND) on the 12-pin header,
-then power on, wait 3 seconds, and remove the jumper. The fan must not spin.
+The image is located at:
 
-    cd ~/tegraflash-native
+    build-jetson/tmp/deploy/images/jetson-orin-nano-devkit/core-image-base-jetson-orin-nano-devkit.rootfs-<datetime>.tegraflash.tar.gz
+
+Extract the archive, then flash with `tegraflash` and a powered USB hub. Put the Jetson into recovery mode by shorting Pin 10 (REC) to Pin 9 (GND) on the 12-pin header, then power on, wait 3 seconds, and remove the jumper. The fan must not spin.
+
+    tar xf core-image-base-jetson-orin-nano-devkit.rootfs-<datetime>.tegraflash.tar.gz
     sudo BOARDID=3767 BOARDSKU=0005 FAB=000 BOARDREV=J.1 ./doflash.sh
 
 ### QEMU
 
-No flashing needed. Download the image from AWS and run locally on WSL2:
-
-    scp user@AWS_IP:~/safemon-yocto/build-qemu/tmp/deploy/images/qemuarm64/Image ~/safemon-qemu/Image
-    scp user@AWS_IP:~/safemon-yocto/build-qemu/tmp/deploy/images/qemuarm64/*.ext4 ~/safemon-qemu/rootfs.ext4
-
-    qemu-system-aarch64 \
-        -machine virt \
-        -cpu cortex-a57 \
-        -m 2048 \
-        -kernel ~/safemon-qemu/Image \
-        -drive file=~/safemon-qemu/rootfs.ext4,format=raw,if=virtio \
-        -append "root=/dev/vda rw console=ttyAMA0" \
-        -device virtio-gpu \
-        -display gtk \
-        -serial mon:stdio
+No flashing needed -- the image runs directly. See [QEMU usage](#qemu) below.
 
 Login: `root` (no password)
 
@@ -204,6 +290,14 @@ Find RPi4 IP:
 All reusable libraries live under `safemon/lib/`. They build and test
 independently from the Yocto image -- no cross-compiler or device needed.
 
+Current libraries:
+
+| Library | Description |
+|---------|-------------|
+| `ecdsa` | secp256k1 ECDSA sign/verify |
+| `config` | Parses `safemon.conf` into a `SafemonConfig` struct |
+| `fault_detector` | Fault evaluation rules (timeout, unknown ID) and Redis-backed detector |
+
 ### Build the Docker image
 
     cd safemon/lib
@@ -219,16 +313,30 @@ independently from the Yocto image -- no cross-compiler or device needed.
 
 ### Inside the container
 
+    # Build (first time, or after CMakeLists changes)
+    cmake -B build -DCMAKE_BUILD_TYPE=Release
+    cmake --build build --parallel $(nproc)
+
     # Re-run all tests
     ctest --test-dir build --output-on-failure
 
-    # Run test binary directly
-    ./build/ecdsa/test/ecdsa_tests
+    # Run tests for one library only
+    ctest --test-dir build --output-on-failure -R config
+    ctest --test-dir build --output-on-failure -R fault
+    ctest --test-dir build --output-on-failure -R ecdsa
 
-    # Run a single test
+    # List all discovered tests without running them
+    ctest --test-dir build -N
+
+    # Run a test binary directly for full gtest output
+    ./build/ecdsa/test/ecdsa_tests
+    ./build/config/test/config_tests
+    ./build/fault_detector/test/fault_detector_tests
+
+    # Run a single test by name
     ./build/ecdsa/test/ecdsa_tests --gtest_filter=ECDSA.VerifyValidSignature
 
-    # List all tests
+    # List all tests in a binary
     ./build/ecdsa/test/ecdsa_tests --gtest_list_tests
 
     # Rebuild after editing source

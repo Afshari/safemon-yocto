@@ -22,6 +22,8 @@ struct EglContext {
     EGLSurface     surf         = EGL_NO_SURFACE;
     uint32_t       width        = 0;
     uint32_t       height       = 0;
+    uint32_t       configured_width  = 0;
+    uint32_t       configured_height = 0;
 };
 
 #else
