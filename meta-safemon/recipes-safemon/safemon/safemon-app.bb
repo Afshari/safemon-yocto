@@ -60,6 +60,9 @@ S = "${WORKDIR}/safemon"
 inherit cmake systemd
 # Default platform is rpi4
 EXTRA_OECMAKE = " -DPLATFORM=rpi4"
+# Override for Qemu
+EXTRA_OECMAKE:qemuarm64 = " -DPLATFORM=rpi4"
+DEPENDS:append:qemuarm64 = " mesa"
 # Override for Jetson
 EXTRA_OECMAKE:jetson-orin-nano-devkit = " -DPLATFORM=jetson"
 
