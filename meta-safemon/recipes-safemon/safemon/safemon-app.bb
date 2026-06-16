@@ -44,6 +44,8 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/fault_detector/CMakeLists.txt \
            file://safemon.conf \
            file://safemon.conf.sig \
+           file://safemon-qemu.conf \
+           file://safemon-qemu.conf.sig \
            file://safemon.pub \
            file://safemon-app.service \
            file://safemon-display.service \
@@ -77,11 +79,18 @@ SYSTEMD_AUTO_ENABLE:${PN} = "enable"
 
 do_install:append() {
     install -d ${D}${sysconfdir}/safemon
-    install -m 0644 ${WORKDIR}/safemon.conf \
-        ${D}${sysconfdir}/safemon/safemon.conf
-
-    install -m 0644 ${WORKDIR}/safemon.conf.sig \
-        ${D}${sysconfdir}/safemon/safemon.conf.sig
+    
+    if [ "${MACHINE}" = "qemuarm64" ]; then
+        install -m 0644 ${WORKDIR}/safemon-qemu.conf \
+            ${D}${sysconfdir}/safemon/safemon.conf
+        install -m 0644 ${WORKDIR}/safemon-qemu.conf.sig \
+            ${D}${sysconfdir}/safemon/safemon.conf.sig
+    else
+        install -m 0644 ${WORKDIR}/safemon.conf \
+            ${D}${sysconfdir}/safemon/safemon.conf
+        install -m 0644 ${WORKDIR}/safemon.conf.sig \
+            ${D}${sysconfdir}/safemon/safemon.conf.sig
+    fi
 
     install -d ${D}${sysconfdir}/safemon/pki
     install -m 0644 ${WORKDIR}/safemon.pub \
