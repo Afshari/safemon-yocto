@@ -107,9 +107,6 @@ To make it permanent:
 | `scripts/setup-aws.sh` | One-time setup for a fresh Ubuntu 24.04 AWS instance |
 | `scripts/cross-compile-rpi4.sh` | Cross-compile a single binary for Raspberry Pi 4 |
 | `scripts/cross-compile-jetson.sh` | Cross-compile a single binary for Jetson Orin Nano |
-| `scripts/fetch_yocto_image.sh` | Download the latest RPi4 image from the build server |
-| `scripts/fetch_qemu_image.sh` | Download the latest QEMU kernel and rootfs from the build server |
-| `scripts/start-qemu.sh` | Launch the QEMU VM with display and SSH port forwarding |
 
 ### Cross-compiling a single binary
 
@@ -131,8 +128,7 @@ Use this during development to rebuild and deploy one binary without a full imag
     scp out/safemon-app-jetson root@jetson-orin-nano-devkit.local:/usr/bin/safemon-app
     ssh root@jetson-orin-nano-devkit.local "systemctl restart safemon-app.service"
 
-Note: cross-compile requires a completed `kas build` first -- the scripts use the
-sysroot from the build directory.
+Note: cross-compile requires a completed `kas build` first -- the scripts use the sysroot from the build directory.
 
 ---
 
@@ -156,10 +152,7 @@ Output: `build-jetson/tmp/deploy/images/jetson-orin-nano-devkit/`
 
 Output: `build-qemu/tmp/deploy/images/qemuarm64/`
 
-The QEMU build uses `distro: safemon-qemu` which differs from the RPi4 distro -- it
-excludes Wi-Fi, uses Mesa virgl instead of V3D, and installs a QEMU-specific
-`safemon.conf` with `drm_device=/dev/dri/card0`. See
-[Platform Configuration Files](#platform-configuration-files) for details.
+The QEMU build uses `distro: safemon-qemu` which differs from the RPi4 distro -- it excludes Wi-Fi, uses Mesa virgl instead of V3D, and installs a QEMU-specific `safemon.conf` with `drm_device=/dev/dri/card0`. See [Platform Configuration Files](#platform-configuration-files) for details.
 
 ---
 
@@ -169,8 +162,7 @@ excludes Wi-Fi, uses Mesa virgl instead of V3D, and installs a QEMU-specific
 
     kas shell kas-rpi4.yml
 
-This drops you into a BitBake shell with all environment variables set --
-useful for running `bitbake` commands directly.
+This drops you into a BitBake shell with all environment variables set -- useful for running `bitbake` commands directly.
 
 ### Rebuild a single recipe
 
@@ -195,8 +187,7 @@ Show the dependency tree for a recipe:
 
     kas shell kas-rpi4.yml -c "bitbake -g safemon-app"
 
-This generates `task-depends.dot`, `pn-depends.dot`, and `pn-buildlist`
-in the current directory.
+This generates `task-depends.dot`, `pn-depends.dot`, and `pn-buildlist` in the current directory.
 
 ### Check recipe build status
 
@@ -262,18 +253,7 @@ Extract the archive, then flash with `tegraflash` and a powered USB hub. Put the
 
 No flashing needed. The image runs directly as a virtual machine.
 
-**Step 1 -- Download the image** (run in WSL2):
-
-    ./scripts/fetch_qemu_image.sh
-
-This downloads the kernel and rootfs to `~/safemon-qemu/` and renames them to
-`Image` and `rootfs.ext4`.
-
-**Step 2 -- Launch QEMU** (run in WSL2):
-
-    ./scripts/start-qemu.sh
-
-Or manually:
+Download the kernel and rootfs from the build server to `~/safemon-qemu/` on your local machine (WSL2 or Linux), then launch with:
 
     qemu-system-aarch64 \
         -machine virt \
@@ -288,23 +268,15 @@ Or manually:
         -netdev user,id=net0,hostfwd=tcp::2222-:22 \
         -device virtio-net-pci,netdev=net0
 
-A GTK window opens showing the display output. The serial console is available
-in the same terminal. Login: `root` (no password).
+A GTK window opens showing the display output. The serial console is available in the same terminal. Login: `root` (no password).
 
-**Notes:**
-- `-device virtio-gpu` creates `/dev/dri/card0` inside the guest -- required for DRM/KMS
+**Flag reference:**
+- `-device virtio-gpu` creates `/dev/dri/card0` inside the guest, required for DRM/KMS
 - `-display gtk` renders the framebuffer via WSLg on Windows 11
-- `-netdev ... hostfwd=tcp::2222-:22` forwards host port 2222 to guest SSH port 22
-- The image files must be in the WSL2 native filesystem (`~/`), not on a Windows
-  drive (`/mnt/d/`), to avoid severe I/O performance degradation
+- `-netdev user,id=net0,hostfwd=tcp::2222-:22` forwards host port 2222 to guest SSH port 22
+- `-device virtio-net-pci,netdev=net0` creates the guest network interface
 
-**Important -- QEMU-specific config files:**
-
-The QEMU image uses `drm_device=/dev/dri/card0` in `safemon.conf` (RPi4 uses
-`card1`). This is baked in at build time -- do not copy an RPi4 config to a QEMU
-image or vice versa. If you need to replace the config file on a running QEMU
-instance, re-sign it with the correct key and copy both files. See
-[Platform Configuration Files](#platform-configuration-files).
+**Important:** the image files must be stored in the WSL2 native filesystem (`~/`), not on a Windows drive (`/mnt/d/` etc.). Running from a Windows drive causes severe I/O performance degradation due to the filesystem translation layer.
 
 ---
 
@@ -330,7 +302,7 @@ Find RPi4 IP:
 
     scp -P 2222 file root@localhost:/destination/path/
 
-Example -- update config on a running QEMU instance:
+Example -- update the config on a running QEMU instance:
 
     scp -P 2222 safemon-qemu.conf root@localhost:/etc/safemon/safemon.conf
     scp -P 2222 safemon-qemu.conf.sig root@localhost:/etc/safemon/safemon.conf.sig
@@ -349,8 +321,7 @@ Example -- update config on a running QEMU instance:
     cansend vcan0 999#CAFEBABE      -- unknown ID, expect WARN
     # wait 5 seconds -- expect ERROR:TIMEOUT
 
-On QEMU, vcan0 is set up automatically at boot by the vcan service. If it is
-missing, check that the kernel was built with the vcan config fragment:
+On QEMU, vcan0 is set up automatically at boot by the vcan service. If it is missing, load the module manually:
 
     modprobe vcan
     ip link add dev vcan0 type vcan
@@ -367,8 +338,7 @@ missing, check that the kernel was built with the vcan config fragment:
     cd safemon/tools/fault-client
     python3 fault_client.py --host PI_IP
 
-For QEMU, use `localhost` as the host (add a port forward to the QEMU launch
-command if needed):
+For QEMU, use `localhost` as the host:
 
     python3 fault_client.py --host localhost
 
@@ -376,29 +346,25 @@ command if needed):
 
 ## Platform Configuration Files
 
-Each platform has its own `safemon.conf` with platform-specific settings.
-The correct file is selected automatically at build time by the recipe.
+Each platform has its own `safemon.conf` with platform-specific settings. The correct file is selected automatically at build time by the recipe.
 
 | Setting | Raspberry Pi 4 | QEMU | Jetson Orin Nano |
 |---------|----------------|------|-----------------|
 | `drm_device` | `/dev/dri/card1` | `/dev/dri/card0` | N/A (Wayland) |
 | Config file in recipe | `safemon.conf` | `safemon-qemu.conf` | `safemon.conf` |
 
-The config file is ECDSA-signed. Both `safemon.conf` and `safemon.conf.sig`
-must always be updated together. To generate a new signed config:
+The config file is ECDSA-signed. Both `safemon.conf` and `safemon.conf.sig` must always be updated together. To generate a new signed config:
 
     cd safemon/tools
     python3 sign_config.py safemon-qemu.conf safemon-qemu.conf.sig
 
-After signing, copy both files to the device (see
-[Copying Files to a Device](#copying-files-to-a-device)).
+After signing, copy both files to the device (see [Copying Files to a Device](#copying-files-to-a-device)).
 
 ---
 
 ## Working with the lib/ Layer
 
-All reusable libraries live under `safemon/lib/`. They build and test
-independently from the Yocto image -- no cross-compiler or device needed.
+All reusable libraries live under `safemon/lib/`. They build and test independently from the Yocto image -- no cross-compiler or device needed.
 
 Current libraries:
 
