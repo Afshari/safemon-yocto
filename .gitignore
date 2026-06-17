@@ -4,6 +4,7 @@ build-qemu/
 build-jetson/
 build/
 notes/
+viz/
 
 # Yocto downloads cache
 downloads/
