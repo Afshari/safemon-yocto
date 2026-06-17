@@ -35,7 +35,6 @@
     - [Interactive shell](#interactive-shell)
     - [Inside the container](#inside-the-container)
   - [Adding a New Library](#adding-a-new-library)
-  - [Commit Message Convention](#commit-message-convention)
 
 ---
 
@@ -427,15 +426,4 @@ Current libraries:
 3. Add any new system dependencies to `safemon/lib/Dockerfile`
 4. Rebuild the image: `docker compose build`
 
----
 
-## Commit Message Convention
-
-    feat:      new feature
-    fix:       bug fix
-    refactor:  restructuring without behaviour change
-    docs:      documentation only
-    test:      adding or fixing tests
-    chore:     build, tooling, dependencies
-
-One line only. Example: `fix: correct expected value in BigInt.Modulo test`

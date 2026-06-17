@@ -1,15 +1,15 @@
-# safemon
+# Safemon
 
 A custom embedded Linux functional safety monitor built with Yocto Scarthgap 5.0.
-Monitors CAN bus frames, detects faults, streams fault events over gRPC, and renders
-a live status dashboard using OpenGL ES. Designed around ISO 26262 principles.
+Monitors CAN bus frames, detects faults, streams fault events over gRPC, and renders a live status dashboard using OpenGL ES. Designed around ISO 26262 principles.
 
 ## Table of Contents
 
-- [safemon](#safemon)
+- [Safemon](#safemon)
   - [Table of Contents](#table-of-contents)
   - [Supported Targets](#supported-targets)
   - [System Architecture](#system-architecture)
+  - [Display Pipeline](#display-pipeline)
   - [Repository Structure](#repository-structure)
   - [Quick Start](#quick-start)
   - [Hardware](#hardware)
@@ -28,15 +28,14 @@ a live status dashboard using OpenGL ES. Designed around ISO 26262 principles.
 
 ## System Architecture
 
-![safemon-display pipeline](docs/assets/display_pipeline.svg)
+![Safemon Architecture](docs/assets/safemon_architecture.svg)
 
-See [docs/spec-graphics.md](docs/spec-graphics.md) for the full display
-pipeline, connector selection logic, and HDMI/DSI configuration details.
+## Display Pipeline
 
-The full pipeline:
+![Safemon Architecture](docs/assets/display_pipeline.svg)
 
-    vcan0 -> safemon-app -> Redis -> FaultDetector -> safemon-display (OpenGL ES)
-                                                   -> gRPC server -> remote clients
+See [docs/spec-graphics.md](docs/spec-graphics.md) for the full display pipeline, connector selection logic, and HDMI/DSI configuration details.
+
 
 ## Repository Structure
 
@@ -56,7 +55,8 @@ The full pipeline:
     │   └── tools/                   -- Python tools (signing, fault client)
     ├── scripts/                     -- build and test helper scripts
     ├── kas-rpi4.yml                 -- kas build config for Raspberry Pi 4
-    └── kas-jetson.yml               -- kas build config for Jetson Orin Nano
+    ├── kas-jetson.yml               -- kas build config for Jetson Orin Nano
+    └── kas-qemu.yml                 -- kas build config for QEMU (qemuarm64)
 
 ## Quick Start
 
@@ -74,7 +74,7 @@ Build and flash an image for your target:
 
     KAS_BUILD_DIR=build-qemu kas build kas-qemu.yml
 
-See `docs/DEVGUIDE.md` for full build, flash, and run instructions.
+See [docs/dev-guide.md](docs/dev-guide.md) for full build, flash, and run instructions.
 
 ## Hardware
 
@@ -99,5 +99,6 @@ Build tool: [kas](https://kas.readthedocs.io/) 5.3
 
 | File | Description |
 |------|-------------|
-| `docs/dev-guide.md` | Build, flash, and run instructions for all targets |
-| `docs/signing.md` | ECDSA key generation and config signing workflow |
+| [dev-guide](docs/dev-guide.md) | Build, flash, and run instructions for all targets |
+| [signing](docs/signing.md) | ECDSA key generation and config signing workflow |
+| [spec-graphics](docs/spec-graphics.md) | full display pipeline |
