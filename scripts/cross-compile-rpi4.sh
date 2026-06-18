@@ -8,7 +8,7 @@ set -e
 #   ./scripts/cross-compile-rpi4.sh <target>
 #
 # Targets:
-#   egl-triangle, drm-display, safemon-display, safemon-app
+#   egl-triangle, drm-display, safemon-display, safemon-app, safemon-chart
 #
 # Override build dir (default: build):
 #   BUILD_DIR=build-rpi4 ./scripts/cross-compile-rpi4.sh safemon-app
@@ -16,7 +16,7 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <target>"
-    echo "  targets: egl-triangle, drm-display, safemon-app, safemon-display"
+    echo "  targets: egl-triangle, drm-display, safemon-app, safemon-display, safemon-chart"
     exit 1
 fi
 
@@ -104,6 +104,20 @@ case $TARGET in
       $FAULT_INC \
       $ECDSA_INC \
       -I safemon/proto \
+      -o "$REPO_ROOT/out/$TARGET"
+    ;;
+  safemon-chart)
+    aarch64-poky-linux-g++ $BASE_FLAGS \
+      -lEGL -lGLESv2 -lgbm -ldrm \
+      safemon/src/display/drm_helper.cpp \
+      safemon/src/display/egl_helper_gbm.cpp \
+      safemon/src/display/waterfall_data.cpp \
+      safemon/src/display/waterfall_chart.cpp \
+      safemon/src/display/safemon_chart.cpp \
+      $CONFIG_SRC \
+      -I safemon/inc/display \
+      -I safemon/inc/third_party \
+      $CONFIG_INC \
       -o "$REPO_ROOT/out/$TARGET"
     ;;
   *)

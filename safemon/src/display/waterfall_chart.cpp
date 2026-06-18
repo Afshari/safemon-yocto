@@ -49,9 +49,9 @@ static void mat4_perspective(float m[16],
     float f = 1.0f / tanf(fovy_rad * 0.5f);
     m[0]  = f / aspect;
     m[5]  = f;
-    m[10] = (far + near) / (near - far);
+    m[10] = -(far + near) / (far - near);
     m[11] = -1.0f;
-    m[14] = (2.0f * far * near) / (near - far);
+    m[14] = -(2.0f * far * near) / (far - near);
 }
 
 static void mat4_lookat(float m[16],
@@ -59,30 +59,27 @@ static void mat4_lookat(float m[16],
                          float cx, float cy, float cz,
                          float ux, float uy, float uz)
 {
-    // forward = normalize(eye - center)
-    float fx = ex - cx, fy = ey - cy, fz = ez - cz;
+    // forward = normalize(center - eye)
+    float fx = cx - ex, fy = cy - ey, fz = cz - ez;
     float fl = sqrtf(fx*fx + fy*fy + fz*fz);
     fx /= fl; fy /= fl; fz /= fl;
 
     // right = normalize(forward x up)
-    float rx = uy*fz - uz*fy;
-    float ry = uz*fx - ux*fz;
-    float rz = ux*fy - uy*fx;
+    float rx = fy*uz - fz*uy;
+    float ry = fz*ux - fx*uz;
+    float rz = fx*uy - fy*ux;
     float rl = sqrtf(rx*rx + ry*ry + rz*rz);
     rx /= rl; ry /= rl; rz /= rl;
 
     // up = right x forward
-    float vx = fy*rz - fz*ry;
-    float vy = fz*rx - fx*rz;
-    float vz = fx*ry - fy*rx;
+    float vx = ry*fz - rz*fy;
+    float vy = rz*fx - rx*fz;
+    float vz = rx*fy - ry*fx;
 
     memset(m, 0, 16 * sizeof(float));
-    m[0]  = rx;  m[4]  = ry;  m[8]  = rz;
-    m[1]  = vx;  m[5]  = vy;  m[9]  = vz;
-    m[2]  = fx;  m[6]  = fy;  m[10] = fz;
-    m[12] = -(rx*ex + ry*ey + rz*ez);
-    m[13] = -(vx*ex + vy*ey + vz*ez);
-    m[14] = -(fx*ex + fy*ey + fz*ez);
+    m[0]  = rx;  m[4]  = ry;  m[8]  = rz;  m[12] = -(rx*ex + ry*ey + rz*ez);
+    m[1]  = vx;  m[5]  = vy;  m[9]  = vz;  m[13] = -(vx*ex + vy*ey + vz*ez);
+    m[2]  = -fx; m[6]  = -fy; m[10] = -fz; m[14] = (fx*ex + fy*ey + fz*ez);
     m[15] = 1.0f;
 }
 
@@ -195,8 +192,8 @@ void WaterfallChart::BuildGeometry(const WaterfallData& data)
 
         for (int b = 0; b < m_buckets_per_day; b++) {
             const float score = day.buckets[b].score;
-            const float x     = static_cast<float>(b) / 100.0f;
-            const float y     = (score / 25.0f);
+            const float x     = static_cast<float>(b) / 25.0f;
+            const float y     = (score / 5.0f);
 
             const RGB color = ScoreToColor(score);
 
@@ -232,26 +229,6 @@ void WaterfallChart::BuildGeometry(const WaterfallData& data)
     glBindVertexArray(0);
 }
 
-void WaterfallChart::SetupCamera()
-{
-    const float aspect = static_cast<float>(m_screen_w) /
-                         static_cast<float>(m_screen_h);
-
-    // center of chart
-    const float cx = (static_cast<float>(m_buckets_per_day) / 100.0f) * 0.5f;
-    const float cz = (static_cast<float>(m_days) * Z_SPACING) * 0.5f;
-
-    mat4_lookat(m_view,
-                cx, 8.0f, cz + 20.0f,   // eye
-                cx, 0.0f, cz,            // center
-                0.0f, 1.0f, 0.0f);       // up
-
-    mat4_perspective(m_proj,
-                     0.9f,   // ~52 degrees fov
-                     aspect,
-                     0.01f,
-                     1000.0f);
-}
 
 void WaterfallChart::Init(const WaterfallData& data,
                            uint32_t screen_w, uint32_t screen_h)
@@ -266,14 +243,31 @@ void WaterfallChart::Init(const WaterfallData& data,
     std::cout << "[WaterfallChart] Initialized\n";
 }
 
+void WaterfallChart::SetupCamera()
+{
+    const float aspect = static_cast<float>(m_screen_w) /
+                         static_cast<float>(m_screen_h);
+
+    const float cx = (static_cast<float>(m_buckets_per_day) / 100.0f) * 0.5f;
+    const float cz = (static_cast<float>(m_days) * Z_SPACING) * 0.5f;
+
+    m_view = glm::lookAt(
+        glm::vec3(cx + 40.0f, 15.0f, cz + 70.0f),
+        glm::vec3(cx + 20.0f,  0.0f, cz),
+        glm::vec3(0.0f, 1.0f, 0.0f)
+    );
+
+    m_proj = glm::perspective(
+        glm::radians(45.0f), aspect, 0.01f, 1000.0f
+    );
+}
+
 void WaterfallChart::Render()
 {
     glUseProgram(m_program);
 
-    // MVP = proj * view (no model transform needed)
-    float mvp[16];
-    mat4_multiply(mvp, m_proj, m_view);
-    glUniformMatrix4fv(m_loc_mvp, 1, GL_FALSE, mvp);
+    glm::mat4 mvp = m_proj * m_view;
+    glUniformMatrix4fv(m_loc_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
 
     glBindVertexArray(m_vao);
     for (int d = 0; d < m_days; d++) {
@@ -283,6 +277,10 @@ void WaterfallChart::Render()
     }
     glBindVertexArray(0);
     glUseProgram(0);
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+        std::cerr << "[gl] Error: " << err << "\n";
 }
 
 void WaterfallChart::Shutdown()

@@ -44,6 +44,9 @@ int main()
     // Init chart
     Safemon::WaterfallChart chart;
     chart.Init(data, W, H);
+    std::cout << "[gl] Vendor:   " << glGetString(GL_VENDOR)   << "\n";
+    std::cout << "[gl] Renderer: " << glGetString(GL_RENDERER) << "\n";
+    std::cout << "[gl] Version:  " << glGetString(GL_VERSION)  << "\n";
 
     glViewport(0, 0, W, H);
     glEnable(GL_DEPTH_TEST);
