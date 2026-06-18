@@ -6,7 +6,7 @@ Initializes config files on first run, then launches the main window.
 import sys
 from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QStyleFactory
 from PyQt6.QtGui import QIcon
 
 from core.config_manager import ensure_all_configs
@@ -22,10 +22,13 @@ def main():
     app.setApplicationName("safemon-gui")
     app.setApplicationDisplayName("Safemon")
 
-    # Step 3 - apply dark theme stylesheet
+    # Step 3 - force Fusion style so QSS border-radius and colors work on Windows
+    app.setStyle(QStyleFactory.create("Fusion"))
+
+    # Step 4 - apply dark theme stylesheet
     app.setStyleSheet(_stylesheet())
 
-    # Step 4 - create and show the main window
+    # Step 5 - create and show the main window
     window = MainWindow()
     window.show()
 

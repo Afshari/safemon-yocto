@@ -4,9 +4,11 @@ Contains the tab bar and hosts all tab widgets.
 """
 
 from PyQt6.QtWidgets import (
-    QMainWindow, QWidget, QTabWidget, QVBoxLayout, QLabel
+    QMainWindow, QWidget, QTabWidget, QVBoxLayout, QLabel, QPushButton
 )
 from PyQt6.QtCore import Qt
+
+from ui.key_management import KeyManagementTab
 
 
 class MainWindow(QMainWindow):
@@ -33,7 +35,7 @@ class MainWindow(QMainWindow):
         self.tabs.setDocumentMode(True)
 
         # --- Placeholder tabs - each will be replaced with real widget ---
-        self.tabs.addTab(_placeholder("Key Management"),  "Key Management")
+        self.tabs.addTab(KeyManagementTab(),               "Key Management")
         self.tabs.addTab(_placeholder("Sign / Verify"),   "Sign / Verify")
         self.tabs.addTab(_placeholder("Fault Monitor"),   "Fault Monitor")
         self.tabs.addTab(_placeholder("Device Files"),    "Device Files")
@@ -45,9 +47,17 @@ class MainWindow(QMainWindow):
 def _placeholder(name: str) -> QWidget:
     """Temporary placeholder widget for a tab not yet implemented."""
     w = QWidget()
+    layout = QVBoxLayout(w)
+    layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
     lbl = QLabel(f"{name} - coming soon")
     lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
     lbl.setStyleSheet("color: #555555; font-size: 16px;")
-    layout = QVBoxLayout(w)
+
+    btn = QPushButton("Test Button")
+    btn.setFixedWidth(160)
+
     layout.addWidget(lbl)
+    layout.addSpacing(12)
+    layout.addWidget(btn, alignment=Qt.AlignmentFlag.AlignCenter)
     return w
