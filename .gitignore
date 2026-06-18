@@ -40,3 +40,9 @@ safemon/build/
 .idea/
 *.swp
 *.swo
+
+# safemon-gui
+safemon/tools/safemon-gui/config/
+.safemon/
+venv/
+.venv/
