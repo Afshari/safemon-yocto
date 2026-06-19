@@ -73,7 +73,7 @@ int main()
                       << std::setfill('0')
                       << (int)frame.data[i] << " ";
         }
-        std::cout << std::endl;
+        std::cout << std::dec << "\n";
 
         // Build frame string
         char buf[64];

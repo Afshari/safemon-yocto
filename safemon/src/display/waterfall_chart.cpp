@@ -4,8 +4,23 @@
 #include <vector>
 #include <cmath>
 #include <cstring>
+#include "gl_app.h"
 
 namespace Safemon {
+
+static bool ProjectToScreen(const glm::vec3& world,
+                             const glm::mat4& mvp,
+                             float screen_w, float screen_h,
+                             float& out_x, float& out_y)
+{
+    glm::vec4 clip = mvp * glm::vec4(world, 1.0f);
+    if (clip.w <= 0.0f) return false;
+
+    glm::vec3 ndc = glm::vec3(clip) / clip.w;
+    out_x = (ndc.x * 0.5f + 0.5f) * screen_w;
+    out_y = (1.0f - (ndc.y * 0.5f + 0.5f)) * screen_h;
+    return true;
+}
 
 // ---------------------------------------------------------------------------
 // Color stops - matching JavaScript version
@@ -281,6 +296,25 @@ void WaterfallChart::Render()
     GLenum err = glGetError();
     if (err != GL_NO_ERROR)
         std::cerr << "[gl] Error: " << err << "\n";
+}
+
+void WaterfallChart::RenderLabels(GLuint text_prog, GLuint font_tex)
+{
+    glm::mat4 mvp = m_proj * m_view;
+
+    for (int d = 0; d < m_days; d += 5) {
+        float z = static_cast<float>(d) * Z_SPACING;
+        float sx, sy;
+        if (ProjectToScreen(glm::vec3(-1.0f, 0.0f, z), mvp,
+                            static_cast<float>(m_screen_w),
+                            static_cast<float>(m_screen_h), sx, sy)) {
+            std::string label = "D" + std::to_string(d);
+            draw_text_gl(text_prog, font_tex, sx, sy, label.c_str(),
+                        0.6f, 0.8f, 1.0f, 1.5f,
+                        static_cast<float>(m_screen_w),
+                        static_cast<float>(m_screen_h));
+        }
+    }
 }
 
 void WaterfallChart::Shutdown()

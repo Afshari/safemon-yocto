@@ -6,9 +6,13 @@
 #include "egl_helper.h"
 #include "waterfall_data.h"
 #include "waterfall_chart.h"
+#include "gl_app.h"
 
 static volatile bool g_running = true;
 static void signal_handler(int) { g_running = false; }
+
+GLuint text_prog = build_text_program();
+GLuint font_tex  = build_font_texture();
 
 int main()
 {
@@ -44,6 +48,10 @@ int main()
     // Init chart
     Safemon::WaterfallChart chart;
     chart.Init(data, W, H);
+
+    GLuint text_prog = build_text_program();
+    GLuint font_tex  = build_font_texture();
+
     std::cout << "[gl] Vendor:   " << glGetString(GL_VENDOR)   << "\n";
     std::cout << "[gl] Renderer: " << glGetString(GL_RENDERER) << "\n";
     std::cout << "[gl] Version:  " << glGetString(GL_VERSION)  << "\n";
@@ -61,6 +69,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         chart.Render();
+        chart.RenderLabels(text_prog, font_tex);
 
         eglSwapBuffers(egl.dpy, egl.surf);
 

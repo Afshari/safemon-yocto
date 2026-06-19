@@ -12,6 +12,7 @@ namespace Safemon {
     public:
         void Init(const WaterfallData& data, uint32_t screen_w, uint32_t screen_h);
         void Render();
+        void RenderLabels(GLuint text_prog, GLuint font_tex);
         void Shutdown();
 
     private:
