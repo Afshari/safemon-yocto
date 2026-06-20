@@ -113,6 +113,9 @@ case $TARGET in
       safemon/src/display/egl_helper_gbm.cpp \
       safemon/src/display/waterfall_data.cpp \
       safemon/src/display/waterfall_chart.cpp \
+      safemon/src/display/camera.cpp \
+      safemon/src/display/text_renderer.cpp \
+      safemon/src/display/axis_gizmo.cpp \
       safemon/src/display/safemon_chart.cpp \
       $CONFIG_SRC \
       -I safemon/inc/display \

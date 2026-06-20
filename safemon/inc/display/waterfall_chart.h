@@ -1,8 +1,6 @@
 #pragma once
 #include <GLES3/gl3.h>
 #include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include "waterfall_data.h"
 
 namespace Safemon {
@@ -10,15 +8,13 @@ namespace Safemon {
     class WaterfallChart
     {
     public:
-        void Init(const WaterfallData& data, uint32_t screen_w, uint32_t screen_h);
-        void Render();
-        void RenderLabels(GLuint text_prog, GLuint font_tex);
+        void Init(const WaterfallData& data);
+        void Render(const glm::mat4& view, const glm::mat4& proj);
         void Shutdown();
 
     private:
         void BuildGeometry(const WaterfallData& data);
         void BuildShaders();
-        void SetupCamera();
 
         struct RGB { float r, g, b; };
         RGB ScoreToColor(float score) const;
@@ -30,12 +26,6 @@ namespace Safemon {
 
         int m_days            = 0;
         int m_buckets_per_day = 0;
-
-        uint32_t m_screen_w   = 0;
-        uint32_t m_screen_h   = 0;
-
-        glm::mat4 m_view;
-        glm::mat4 m_proj;
 
         static constexpr float Z_SPACING  = 1.0f;
         static constexpr float MAX_HEIGHT = 4.0f;

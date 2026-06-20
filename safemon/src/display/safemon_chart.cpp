@@ -6,13 +6,12 @@
 #include "egl_helper.h"
 #include "waterfall_data.h"
 #include "waterfall_chart.h"
-#include "gl_app.h"
+#include "camera.h"
+#include "text_renderer.h"
+#include "axis_gizmo.h"
 
 static volatile bool g_running = true;
 static void signal_handler(int) { g_running = false; }
-
-GLuint text_prog = build_text_program();
-GLuint font_tex  = build_font_texture();
 
 int main()
 {
@@ -45,12 +44,28 @@ int main()
     Safemon::WaterfallData data;
     if (!data.Load("/etc/safemon/fault_data.json")) return 1;
 
-    // Init chart
-    Safemon::WaterfallChart chart;
-    chart.Init(data, W, H);
+    Safemon::Camera camera;
+    float chart_width  = static_cast<float>(data.buckets_per_day) / 100.0f;
+    float chart_depth  = static_cast<float>(data.days) * 1.0f; // matches Z_SPACING in WaterfallChart
 
-    GLuint text_prog = build_text_program();
-    GLuint font_tex  = build_font_texture();
+    float cx = chart_width * 0.5f;
+    float cz = chart_depth * 0.5f;
+
+    camera.LookAt(
+        glm::vec3(cx + 40.0f, 15.0f, cz + 80.0f),
+        glm::vec3(cx + 20.0f,         0.0f, cz)
+    );
+
+    Safemon::WaterfallChart chart;
+    chart.Init(data);
+
+    Safemon::TextRenderer textRenderer;
+    textRenderer.Init("/etc/safemon/JetBrainsMono-Regular.ttf");
+    textRenderer.AddSize("title", 28.0f);
+    textRenderer.AddSize("small", 16.0f);
+
+    Safemon::AxisGizmo gizmo;
+    gizmo.Init();
 
     std::cout << "[gl] Vendor:   " << glGetString(GL_VENDOR)   << "\n";
     std::cout << "[gl] Renderer: " << glGetString(GL_RENDERER) << "\n";
@@ -68,8 +83,19 @@ int main()
         glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        chart.Render();
-        chart.RenderLabels(text_prog, font_tex);
+        chart.Render(camera.GetViewMatrix(), camera.GetProjectionMatrix(static_cast<float>(W) / static_cast<float>(H)));
+
+        textRenderer.Begin(W, H);
+        textRenderer.DrawText(20.0f, 30.0f, "SAFEMON CHART", glm::vec3(1.0f, 1.0f, 1.0f), "title");
+        textRenderer.End();
+
+        gizmo.Render(camera, textRenderer, W, H);
+
+        textRenderer.Begin(W, H);
+        textRenderer.DrawText(200.0f, H - 130.0f, "X: Time of Day", glm::vec3(1.0f, 0.25f, 0.25f), "small");
+        textRenderer.DrawText(200.0f, H - 100.0f, "Y: Fault Severity", glm::vec3(0.3f, 1.0f, 0.4f), "small");
+        textRenderer.DrawText(200.0f, H -  70.0f, "Z: Day (0 = Today)", glm::vec3(0.3f, 0.6f, 1.0f), "small");
+        textRenderer.End();
 
         eglSwapBuffers(egl.dpy, egl.surf);
 
@@ -104,6 +130,8 @@ int main()
         gbm_surface_release_buffer(egl.gbm_surf, prev_bo);
     }
 #endif
+    gizmo.Shutdown();
+    textRenderer.Shutdown();
     chart.Shutdown();
     egl_cleanup(egl);
     drm_close(drm);
