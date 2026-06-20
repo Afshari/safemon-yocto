@@ -39,12 +39,18 @@ DEFAULT_QEMU = {
     "description": "QEMU"
 }
 
+DEFAULT_DEVICE_FILES = {
+    "safemon.conf": "/etc/safemon/safemon.conf",
+    "safemon.conf.sig": "/etc/safemon/safemon.conf.sig"
+}
+
 # Map of filename -> default content
 CONFIG_FILES = {
     "app.json":              DEFAULT_APP,
     "raspberry_pi.json":     DEFAULT_RASPBERRY_PI,
     "jetson_orin_nano.json": DEFAULT_JETSON_ORIN_NANO,
     "qemu.json":             DEFAULT_QEMU,
+    "device_files.json":     DEFAULT_DEVICE_FILES,
 }
 
 
@@ -106,6 +112,8 @@ def load_platform(platform: str) -> dict:
 def save_platform(platform: str, data: dict) -> None:
     save(f"{platform}.json", data)
 
+def load_device_files() -> dict:
+    return load("device_files.json")
 
 def _write_json(path: Path, data: dict) -> None:
     with open(path, "w", encoding="utf-8") as f:

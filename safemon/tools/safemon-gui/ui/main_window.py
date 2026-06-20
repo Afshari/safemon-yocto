@@ -9,7 +9,12 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt
 
 from ui.key_management import KeyManagementTab
+from ui.sign_verify import SignVerifyTab
+from ui.device_status import DeviceStatusTab
 
+from core.device_session import DeviceSession
+from ui.device_topbar import DeviceTopBar
+from ui.device_files import DeviceFilesTab
 
 class MainWindow(QMainWindow):
 
@@ -21,6 +26,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Safemon")
         self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
+        self.session = DeviceSession()
         self._build_ui()
 
     def _build_ui(self):
@@ -31,15 +37,18 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
+        self.topbar = DeviceTopBar(self.session)
+        layout.addWidget(self.topbar)
+
         self.tabs = QTabWidget()
         self.tabs.setDocumentMode(True)
 
         # --- Placeholder tabs - each will be replaced with real widget ---
-        self.tabs.addTab(KeyManagementTab(),               "Key Management")
-        self.tabs.addTab(_placeholder("Sign / Verify"),   "Sign / Verify")
+        self.tabs.addTab(KeyManagementTab(self.session),   "Key Management")
+        self.tabs.addTab(SignVerifyTab(),                  "Sign / Verify")
         self.tabs.addTab(_placeholder("Fault Monitor"),   "Fault Monitor")
-        self.tabs.addTab(_placeholder("Device Files"),    "Device Files")
-        self.tabs.addTab(_placeholder("Device Status"),   "Device Status")
+        self.tabs.addTab(DeviceFilesTab(self.session),      "Device Files")
+        self.tabs.addTab(DeviceStatusTab(self.session),     "Device Status")
 
         layout.addWidget(self.tabs)
 

@@ -4,7 +4,12 @@ Handles key pair generation and copying public key to device via SCP.
 """
 
 import os
+import sys
 from pathlib import Path
+
+SAFEMON_SIGN_DIR = Path(__file__).resolve().parent.parent.parent / "safemon-sign"
+print(SAFEMON_SIGN_DIR)
+sys.path.insert(0, str(SAFEMON_SIGN_DIR))
 
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
@@ -12,12 +17,16 @@ from PyQt6.QtWidgets import (
     QSizePolicy
 )
 from PyQt6.QtCore import Qt
+from core.workers import Worker
 
+from core.ssh_manager import SSHManager
+from core.config_manager import load_platform
 
 class KeyManagementTab(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, session, parent=None):
         super().__init__(parent)
+        self._session = session
         self._build_ui()
 
     def _build_ui(self):
@@ -36,7 +45,7 @@ class KeyManagementTab(QWidget):
         panel = QWidget()
         panel.setFixedWidth(300)
         panel.setObjectName("leftPanel")
-        panel.setStyleSheet("#leftPanel { background-color: #323232; }")
+        panel.setStyleSheet("#leftPanel { background-color: #4a4a4a; }")
 
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(16, 16, 16, 16)
@@ -66,15 +75,9 @@ class KeyManagementTab(QWidget):
         scp_layout = QVBoxLayout(scp_group)
         scp_layout.setSpacing(6)
 
-        self._target_combo = QComboBox()
-        self._target_combo.addItems(["Raspberry Pi", "Jetson Orin Nano", "QEMU"])
-
         self._scp_btn = QPushButton("Copy Public Key to Device")
-        self._scp_btn.setEnabled(False)
-        self._scp_btn.setToolTip("SSH connection manager not yet available")
+        self._scp_btn.clicked.connect(self._copy_pubkey_to_device)
 
-        scp_layout.addWidget(QLabel("Target device:"))
-        scp_layout.addWidget(self._target_combo)
         scp_layout.addWidget(self._scp_btn)
 
         # --- Assemble ---
@@ -134,19 +137,77 @@ class KeyManagementTab(QWidget):
             return
 
         key_path = key_dir / "safemon.key"
-        pub_path = key_dir / "safemon.pub"
 
-        try:
-            from safemon_sign import generate_keypair
-            generate_keypair(str(key_path))
-            self._log(f"OK: Private key -> {key_path}")
-            self._log(f"OK: Public key  -> {pub_path}")
-        except ImportError:
-            self._log("WARNING: safemon_sign module not found on path.")
-            self._log(f"Would write private key to: {key_path}")
-            self._log(f"Would write public key to:  {pub_path}")
-        except Exception as e:
-            self._log(f"ERROR: {e}")
+        self._worker = Worker(self._do_generate_keys, key_path)
+        self._worker.finished_ok.connect(self._on_generate_success)
+        self._worker.failed.connect(self._on_generate_failed)
+        self._worker.start()
+
+    def _do_generate_keys(self, key_path):
+        from safemon_sign import random_scalar, G, save_keypair, save_pubkey
+
+        private_key = random_scalar()
+        public_key = private_key * G
+
+        pub_path = key_path.with_suffix(".pub")
+
+        save_keypair(str(key_path), private_key, public_key)
+        save_pubkey(str(pub_path), public_key)
+
+        return key_path, pub_path
+
+    def _on_generate_success(self, result):
+        key_path, pub_path = result
+        self._log(f"OK: Private key -> {key_path}")
+        self._log(f"OK: Public key  -> {pub_path}")
+
+    def _on_generate_failed(self, error_text):
+        self._log(f"ERROR: {error_text}")
 
     def _log(self, message: str):
         self._output.append(message)
+        
+        
+    def _copy_pubkey_to_device(self):
+        key_dir = Path(self._key_dir_field.text().strip())
+        pub_path = key_dir / "safemon.pub"
+
+        if not pub_path.exists():
+            self._log(f"ERROR: Public key not found at {pub_path}. Generate a key pair first.")
+            return
+
+        platform_key = self._session.platform_key
+        config = load_platform(platform_key)
+        host = config.get("host", "")
+        port = config.get("port", 22)
+        username = self._session.username or "root"
+        password = self._session.password
+
+        if not host:
+            self._log(f"ERROR: No host configured for {platform_key}. Check config/{platform_key}.json")
+            return
+
+        self._log(f"Copying {pub_path} -> {username}@{host}:/etc/safemon/pki/safemon.pub ...")
+
+        self._scp_worker = Worker(
+            self._do_copy_pubkey, str(pub_path), host, port, username, password
+        )
+        self._scp_worker.finished_ok.connect(self._on_copy_success)
+        self._scp_worker.failed.connect(self._on_copy_failed)
+        self._scp_worker.start()
+
+    def _do_copy_pubkey(self, local_pub_path, host, port, username, password):
+        mgr = SSHManager(host, port, username, password)
+        mgr.connect()
+        try:
+            mgr.run_command("mkdir -p /etc/safemon/pki")
+            mgr.put_file(local_pub_path, "/etc/safemon/pki/safemon.pub")
+        finally:
+            mgr.close()
+        return "/etc/safemon/pki/safemon.pub"
+
+    def _on_copy_success(self, remote_path):
+        self._log(f"OK: Public key copied to device -> {remote_path}")
+
+    def _on_copy_failed(self, error_text):
+        self._log(f"ERROR: {error_text}")
