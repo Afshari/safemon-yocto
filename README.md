@@ -10,6 +10,7 @@ Monitors CAN bus frames, detects faults, streams fault events over gRPC, and ren
   - [Supported Targets](#supported-targets)
   - [System Architecture](#system-architecture)
   - [Display Pipeline](#display-pipeline)
+  - [Embedded GUI](#embedded-gui)
   - [Repository Structure](#repository-structure)
   - [Quick Start](#quick-start)
   - [Hardware](#hardware)
@@ -36,6 +37,16 @@ Monitors CAN bus frames, detects faults, streams fault events over gRPC, and ren
 
 See [docs/spec-graphics.md](docs/spec-graphics.md) for the full display pipeline, connector selection logic, and HDMI/DSI configuration details.
 
+## Embedded GUI
+
+Two OpenGL ES applications render live diagnostics directly on the framebuffer — no browser, no app framework:
+
+- **`safemon-display`** — a glassmorphism status panel showing live CAN bus and Redis health, active fault state, and frame telemetry, polling Redis once per second.
+- **`safemon-chart`** — a 3D fault waterfall visualizing severity across time-of-day and day-of-week, color-mapped from blue (healthy) to red (critical).
+
+Both run identically across all three supported targets.
+
+![Safemon Embedded GUI](docs/assets/embedded_gui.jpg)
 
 ## Repository Structure
 

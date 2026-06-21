@@ -157,7 +157,7 @@ bool egl_init(EglContext& e, int /*drm_fd*/, uint32_t W, uint32_t H)
     e.ctx = eglCreateContext(e.dpy, cfg, EGL_NO_CONTEXT, ctx_attrs);
     if (e.ctx == EGL_NO_CONTEXT) {
         std::cerr << "[egl] eglCreateContext failed: 0x"
-                  << std::hex << eglGetError() << "\n";
+                  << std::hex << eglGetError() << std::dec << "\n";
         return false;
     }
 
@@ -165,7 +165,7 @@ bool egl_init(EglContext& e, int /*drm_fd*/, uint32_t W, uint32_t H)
         e.dpy, cfg, (EGLNativeWindowType)e.wl_win, nullptr);
     if (e.surf == EGL_NO_SURFACE) {
         std::cerr << "[egl] eglCreateWindowSurface failed: 0x"
-                  << std::hex << eglGetError() << "\n";
+                  << std::hex << eglGetError() << std::dec << "\n";
         return false;
     }
 

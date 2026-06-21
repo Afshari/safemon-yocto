@@ -94,7 +94,9 @@ target_link_libraries(egl-triangle PRIVATE
 # ---------------------------------------------------------------------------
 add_executable(safemon-display
     src/display/safemon_display.cpp
-    src/display/gl_app.cpp
+    src/display/glass_panel.cpp
+    src/display/dashboard.cpp
+    src/display/text_renderer.cpp
     src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
@@ -104,6 +106,7 @@ endif()
 
 target_include_directories(safemon-display PRIVATE
     inc/display
+    inc/third_party
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
@@ -120,7 +123,41 @@ target_link_libraries(safemon-display PRIVATE
 )
 
 # ---------------------------------------------------------------------------
+# safemon-chart
+# ---------------------------------------------------------------------------
+add_executable(safemon-chart
+    src/display/safemon_chart.cpp
+    src/display/waterfall_data.cpp
+    src/display/waterfall_chart.cpp
+    src/display/camera.cpp
+    src/display/text_renderer.cpp
+    src/display/axis_gizmo.cpp
+    src/display/drm_helper.cpp
+    ${EGL_HELPER_SRC}
+)
+if(PLATFORM_DEPS_TARGET)
+    add_dependencies(safemon-chart ${PLATFORM_DEPS_TARGET})
+endif()
+
+target_include_directories(safemon-chart PRIVATE
+    inc/display
+    inc/third_party
+    ${HIREDIS_INCLUDE}
+    ${DRM_INCLUDE}
+    ${DRM_INCLUDE}/drm
+    ${DISPLAY_EXTRA_INCLUDES}
+)
+
+target_link_libraries(safemon-chart PRIVATE
+    config
+    ${EGL_LIB}
+    ${GLES2_LIB}
+    ${DISPLAY_EXTRA_LIBS}
+    ${HIREDIS_LIB}
+)
+
+# ---------------------------------------------------------------------------
 # Install
 # ---------------------------------------------------------------------------
-install(TARGETS safemon-app drm-display egl-triangle safemon-display
+install(TARGETS safemon-app drm-display egl-triangle safemon-display safemon-chart
         DESTINATION bin)
