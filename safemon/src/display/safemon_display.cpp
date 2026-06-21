@@ -1,35 +1,32 @@
 #include <iostream>
 #include <csignal>
-#include <fcntl.h>
-#include <unistd.h>
-#include <GLES2/gl2.h>
-#include <xf86drm.h>
-#include <xf86drmMode.h>
-#include <drm_fourcc.h>
+#include <GLES3/gl3.h>
 #include <hiredis/hiredis.h>
+#include "config.h"
 #include "drm_helper.h"
 #include "egl_helper.h"
-#include "gl_app.h"
-#include "config.h"
 #include "ecdsa_verify_file.h"
+#include "dashboard.h"
+#include "text_renderer.h"
+#include <time.h>
 
-struct DisplayState {
-    std::string last_frame  = "---";
-    long        frame_count = 0;
-    bool        redis_ok    = false;
-    bool        can_ok      = false;
-};
+static float get_time_seconds()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return static_cast<float>(ts.tv_sec) + static_cast<float>(ts.tv_nsec) / 1e9f;
+}
 
 static volatile bool g_running = true;
 static void signal_handler(int) { g_running = false; }
 
-int main() {
+int main()
+{
     std::signal(SIGINT,  signal_handler);
     std::signal(SIGTERM, signal_handler);
 
     SafemonConfig cfg = load_config("/etc/safemon/safemon.conf");
 
-    // Verify config signature before proceeding
     if (!ecdsa::verify_file("/etc/safemon/safemon.conf",
                             "/etc/safemon/pki/safemon.pub"))
     {
@@ -37,19 +34,17 @@ int main() {
         return 1;
     }
 
-// DRM init
 #ifndef PLATFORM_JETSON
     DrmState drm;
     if (!drm_open(drm, cfg)) return 1;
     uint32_t W = drm.mode.hdisplay;
     uint32_t H = drm.mode.vdisplay;
 #else
-    DrmState drm;  // kept for cleanup compatibility, not used for display
+    DrmState drm;
     uint32_t W = 1920;
     uint32_t H = 1080;
 #endif
 
-    // EGL init
     EglContext egl;
     if (!egl_init(egl, drm.fd, W, H)) return 1;
 
@@ -58,10 +53,9 @@ int main() {
     H = egl.height;
 #endif
 
-    std::cout << "[gl-display] version: foundation\n";
-    std::cout << "[gl-display] Running. Ctrl+C to exit.\n";
+    std::cout << "[safemon-display] version: glass\n";
+    std::cout << "[safemon-display] Running. Ctrl+C to exit.\n";
 
-    // Redis
     redisContext* redis = redisConnect(cfg.redis_host.c_str(), cfg.redis_port);
     const bool redis_ok = (redis && !redis->err);
     if (!redis_ok)
@@ -69,29 +63,41 @@ int main() {
     else
         std::cout << "[redis] Connected\n";
 
+    Safemon::TextRenderer textRenderer;
+    textRenderer.Init("/etc/safemon/JetBrainsMono-Regular.ttf");
+
+    float design_scale = std::min(
+        static_cast<float>(W) / 800.0f,
+        static_cast<float>(H) / 480.0f
+    );
+
+    Safemon::Dashboard dashboard;
+    dashboard.Init(&textRenderer, design_scale);
+
+    std::cout << "[gl] Vendor:   " << glGetString(GL_VENDOR)   << "\n";
+    std::cout << "[gl] Renderer: " << glGetString(GL_RENDERER) << "\n";
+    std::cout << "[gl] Version:  " << glGetString(GL_VERSION)  << "\n";
+
+    glViewport(0, 0, W, H);
+
 #ifndef PLATFORM_JETSON
     gbm_bo*  prev_bo    = nullptr;
     uint32_t prev_fb_id = 0;
 #endif
 
-    glViewport(0, 0, W, H);
-
-    GLuint rect_prog = build_rect_program();
-
-    GLuint text_prog = build_text_program();
-    GLuint font_tex  = build_font_texture();    
-
     while (g_running) {
 
-        // Read from Redis
-        DisplayState state;
+        Safemon::DashboardState state;
         state.redis_ok = redis_ok;
+
         if (redis_ok) {
             redisReply* reply = (redisReply*)redisCommand(redis,
                                 "LINDEX safemon:can:frames 0");
             if (reply && reply->type == REDIS_REPLY_STRING) {
                 state.last_frame = std::string(reply->str, reply->len);
                 state.can_ok     = true;
+            } else {
+                state.can_ok = false;
             }
             if (reply) freeReplyObject(reply);
 
@@ -100,90 +106,28 @@ int main() {
             if (cnt && cnt->type == REDIS_REPLY_INTEGER)
                 state.frame_count = cnt->integer;
             if (cnt) freeReplyObject(cnt);
-        }
 
-        // Read fault status
-        std::string fault_status = "APP DOWN";
-        if (redis_ok) {
             redisReply* fault = (redisReply*)redisCommand(redis,
                                 "GET safemon:faults:current");
             if (fault && fault->type == REDIS_REPLY_STRING)
-                fault_status = std::string(fault->str, fault->len);
+                state.fault_code = std::string(fault->str, fault->len);
             else
-                fault_status = "APP DOWN";
+                state.fault_code = "APP DOWN";
             if (fault) freeReplyObject(fault);
+        } else {
+            state.can_ok = false;
+            state.fault_code = "APP DOWN";
         }
 
-        // Draw
-        glClearColor(0.07f, 0.07f, 0.10f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.07f, 0.11f, 0.21f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Title bar
-        draw_rect(rect_prog, 0, 0, W, 64, 0.27f, 0.27f, 0.27f, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    20, 18, "SAFEMON STATUS PANEL",
-                    1.0f, 1.0f, 1.0f, 3.0f, W, H);
-
-        // CAN status box
-        float can_r = state.can_ok ? 0.0f : 1.0f;
-        float can_g = state.can_ok ? 1.0f : 0.0f;
-        draw_rect(rect_prog, 10, 90, 180, 60, can_r, can_g, 0.0f, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    20, 108,
-                    state.can_ok ? "CAN OK" : "CAN ERR",
-                    0.0f, 0.0f, 0.0f, 2.0f, W, H);
-
-        // Redis status box
-        float red_r = state.redis_ok ? 0.0f : 1.0f;
-        float red_g = state.redis_ok ? 1.0f : 0.0f;
-        draw_rect(rect_prog, 200, 90, 180, 60, red_r, red_g, 0.0f, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    210, 108,
-                    state.redis_ok ? "REDIS OK" : "REDIS ERR",
-                    0.0f, 0.0f, 0.0f, 2.0f, W, H);
-
-        // Last frame
-        draw_text_gl(text_prog, font_tex,
-                    10, 175, "LAST FRAME:",
-                    1.0f, 1.0f, 0.0f, 2.0f, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    10, 200, state.last_frame.c_str(),
-                    1.0f, 1.0f, 1.0f, 2.0f, W, H);
-
-        // Frame count
-        draw_text_gl(text_prog, font_tex,
-                    10, 240, "FRAMES IN QUEUE:",
-                    1.0f, 1.0f, 0.0f, 2.0f, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    10, 265, std::to_string(state.frame_count).c_str(),
-                    1.0f, 1.0f, 1.0f, 2.0f, W, H);
-
-        // Fault status box
-        float fr = 0.0f, fg = 0.0f, fb = 0.0f;
-        if (fault_status.substr(0, 2) == "OK")
-            { fr = 0.0f; fg = 1.0f; fb = 0.0f; }  // green
-        else if (fault_status.substr(0, 4) == "WARN")
-            { fr = 1.0f; fg = 0.8f; fb = 0.0f; }  // yellow
-        else if (fault_status.substr(0, 7) == "APP DOWN")
-            { fr = 0.5f; fg = 0.0f; fb = 0.5f; }       // purple - app not running
-        else
-            { fr = 1.0f; fg = 0.0f; fb = 0.0f; }  // red
-
-        draw_rect(rect_prog, 10, 300, W - 20, 60, fr, fg, fb, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    20, 318, fault_status.c_str(),
-                    0.0f, 0.0f, 0.0f, 1.5f, W, H);
-
-        // Footer
-        draw_rect(rect_prog, 0, H - 30, W, 30, 0.27f, 0.27f, 0.27f, W, H);
-        draw_text_gl(text_prog, font_tex,
-                    10, H - 22, "KERNEL 6.12 PREEMPT | SAFEMON 0.1",
-                    1.0f, 1.0f, 0.0f, 1.5f, W, H);
+        float time_seconds = get_time_seconds();
+        dashboard.Render(state, time_seconds, W, H);
 
         eglSwapBuffers(egl.dpy, egl.surf);
 
 #ifndef PLATFORM_JETSON
-        // GBM -> DRM
         gbm_bo* bo = gbm_surface_lock_front_buffer(egl.gbm_surf);
         if (!bo) break;
 
@@ -204,7 +148,7 @@ int main() {
         }
         prev_bo    = bo;
         prev_fb_id = fb_id;
-#endif // PLATFORM_JETSON
+#endif
 
         sleep(1);
     }
@@ -216,9 +160,8 @@ int main() {
         gbm_surface_release_buffer(egl.gbm_surf, prev_bo);
     }
 #endif
-    glDeleteProgram(rect_prog);
-    glDeleteProgram(text_prog);
-    glDeleteTextures(1, &font_tex);
+    dashboard.Shutdown();
+    textRenderer.Shutdown();
     if (redis) redisFree(redis);
     egl_cleanup(egl);
     drm_close(drm);

@@ -94,7 +94,9 @@ target_link_libraries(egl-triangle PRIVATE
 # ---------------------------------------------------------------------------
 add_executable(safemon-display
     src/display/safemon_display.cpp
-    src/display/gl_app.cpp
+    src/display/glass_panel.cpp
+    src/display/dashboard.cpp
+    src/display/text_renderer.cpp
     src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
@@ -104,6 +106,7 @@ endif()
 
 target_include_directories(safemon-display PRIVATE
     inc/display
+    inc/third_party
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm

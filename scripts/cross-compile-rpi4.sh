@@ -77,11 +77,14 @@ case $TARGET in
       -lEGL -lGLESv2 -lgbm -ldrm -lhiredis -lgmp -lcrypto \
       safemon/src/display/drm_helper.cpp \
       safemon/src/display/egl_helper_gbm.cpp \
+      safemon/src/display/glass_panel.cpp \
+      safemon/src/display/dashboard.cpp \
+      safemon/src/display/text_renderer.cpp \
       safemon/src/display/safemon_display.cpp \
-      safemon/src/display/gl_app.cpp \
       $CONFIG_SRC \
       $ECDSA_SRC \
       -I safemon/inc/display \
+      -I safemon/inc/third_party \
       $CONFIG_INC \
       $ECDSA_INC \
       -o "$REPO_ROOT/out/$TARGET"
