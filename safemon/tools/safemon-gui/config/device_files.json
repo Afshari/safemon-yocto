@@ -1,0 +1,4 @@
+{
+  "safemon.conf": "/etc/safemon/safemon.conf",
+  "safemon.conf.sig": "/etc/safemon/safemon.conf.sig"
+}

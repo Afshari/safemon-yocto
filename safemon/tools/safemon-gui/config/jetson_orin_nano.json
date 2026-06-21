@@ -1,0 +1,6 @@
+{
+  "host": "jetson-orin-nano-devkit.local",
+  "user": "root",
+  "port": 22,
+  "description": "Jetson Orin Nano"
+}
