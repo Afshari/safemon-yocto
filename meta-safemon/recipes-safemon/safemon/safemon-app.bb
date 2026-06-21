@@ -55,6 +55,25 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/proto/fault.pb.h \
            file://safemon/proto/fault.grpc.pb.cc \
            file://safemon/proto/fault.grpc.pb.h \
+           file://safemon/inc/third_party/glm \
+           file://safemon/inc/third_party/stb \
+           file://safemon/src/display/waterfall_data.cpp \
+           file://safemon/inc/display/waterfall_data.h \
+           file://safemon/src/display/waterfall_chart.cpp \
+           file://safemon/inc/display/waterfall_chart.h \
+           file://safemon/src/display/camera.cpp \
+           file://safemon/inc/display/camera.h \
+           file://safemon/src/display/text_renderer.cpp \
+           file://safemon/inc/display/text_renderer.h \
+           file://safemon/src/display/axis_gizmo.cpp \
+           file://safemon/inc/display/axis_gizmo.h \
+           file://safemon/src/display/safemon_chart.cpp \
+           file://safemon/src/display/glass_panel.cpp \
+           file://safemon/inc/display/glass_panel.h \
+           file://safemon/src/display/dashboard.cpp \
+           file://safemon/inc/display/dashboard.h \
+           file://safemon/inc/third_party/nlohmann \
+           file://JetBrainsMono-Regular.ttf \
           "
 
 S = "${WORKDIR}/safemon"
@@ -96,6 +115,9 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/safemon.pub \
         ${D}${sysconfdir}/safemon/pki/safemon.pub
 
+    install -m 0644 ${WORKDIR}/JetBrainsMono-Regular.ttf \
+        ${D}${sysconfdir}/safemon/JetBrainsMono-Regular.ttf
+
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/safemon-app.service \
         ${D}${systemd_system_unitdir}/safemon-app.service
@@ -122,6 +144,7 @@ FILES:${PN} += "${bindir}/safemon-app \
                 ${sysconfdir}/safemon/safemon.conf \
                 ${sysconfdir}/safemon/safemon.conf.sig \
                 ${sysconfdir}/safemon/pki/safemon.pub \
+                ${sysconfdir}/safemon/JetBrainsMono-Regular.ttf \
                 ${sysconfdir}/safemon-build-info \
                 ${systemd_system_unitdir}/safemon-app.service \
                 ${systemd_system_unitdir}/safemon-display.service"

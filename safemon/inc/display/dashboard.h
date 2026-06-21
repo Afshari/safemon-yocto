@@ -18,6 +18,8 @@ namespace Safemon {
         long        frame_count     = 1248;
         std::string uptime          = "02:41:09";
         std::string clock           = "15:21:08";
+        std::string footer_machine  = "RPI4";
+        std::string footer_build    = "BUILD 2026.06.20";
     };
 
     class Dashboard
@@ -37,7 +39,7 @@ namespace Safemon {
         void DrawConnectionText(const DashboardState& state);
         void DrawFaultText(const DashboardState& state);
         void DrawTelemetryText(const DashboardState& state);
-        void DrawFooterText();
+        void DrawFooterText(const DashboardState& state);
 
         // scale-aware draw helpers
         void Panel(float x, float y, float w, float h, const GlassPanel::Style& style);

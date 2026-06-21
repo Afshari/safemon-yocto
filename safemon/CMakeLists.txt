@@ -129,6 +129,9 @@ add_executable(safemon-chart
     src/display/safemon_chart.cpp
     src/display/waterfall_data.cpp
     src/display/waterfall_chart.cpp
+    src/display/camera.cpp
+    src/display/text_renderer.cpp
+    src/display/axis_gizmo.cpp
     src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
@@ -138,6 +141,7 @@ endif()
 
 target_include_directories(safemon-chart PRIVATE
     inc/display
+    inc/third_party
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm

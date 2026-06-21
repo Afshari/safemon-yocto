@@ -67,17 +67,20 @@ if [ "$TARGET" = "safemon-display" ]; then
 fi
 
 case $TARGET in
-  safemon-display)
+safemon-display)
     aarch64-poky-linux-g++ $BASE_FLAGS \
       -lEGL -lGLESv2 -lwayland-client -lwayland-egl -ldrm -lhiredis -lgmp -lcrypto \
       safemon/src/display/drm_helper.cpp \
       safemon/src/display/egl_helper_wayland.cpp \
+      safemon/src/display/glass_panel.cpp \
+      safemon/src/display/dashboard.cpp \
+      safemon/src/display/text_renderer.cpp \
       safemon/src/display/safemon_display.cpp \
-      safemon/src/display/gl_app.cpp \
       "$XDG_SHELL_OBJ" \
       $CONFIG_SRC \
       $ECDSA_SRC \
       -I safemon/inc/display \
+      -I safemon/inc/third_party \
       -I "$REPO_ROOT/out" \
       $CONFIG_INC \
       $ECDSA_INC \

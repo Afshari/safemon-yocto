@@ -25,7 +25,7 @@ void main() {
 )";
 
     static const char* PANEL_FRAG_SRC = R"(#version 300 es
-precision mediump float;
+precision highp float;
 
 in vec2 v_local;
 in vec2 v_uv;
