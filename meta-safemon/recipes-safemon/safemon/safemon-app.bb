@@ -41,6 +41,9 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/fault_detector/src/fault_detector.cpp \
            file://safemon/lib/fault_detector/inc/fault_rules.h \
            file://safemon/lib/fault_detector/inc/fault_detector.h \
+           file://safemon/lib/fault_detector/inc/redis_client.h \
+           file://safemon/lib/fault_detector/inc/redis_client_impl.h \
+           file://safemon/lib/fault_detector/src/redis_client_impl.cpp \
            file://safemon/lib/fault_detector/CMakeLists.txt \
            file://rpi4/safemon.conf \
            file://rpi4/safemon.conf.sig \

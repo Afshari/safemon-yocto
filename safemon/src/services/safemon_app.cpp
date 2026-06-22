@@ -10,6 +10,7 @@
 #include "fault_detector.h"
 #include "ecdsa_verify_file.h"
 #include "grpc_server.h"
+#include "redis_client_impl.h"
 
 static volatile bool running = true;
 
@@ -40,7 +41,10 @@ int main()
     }
     std::cout << "Connected to Redis!" << std::endl;
 
-    FaultDetector fault_detector(cfg);
+    FaultDetector fault_detector(
+        cfg,
+        std::make_unique<RedisClient>(cfg.redis_host, cfg.redis_port)
+    );
     fault_detector.start();
 
     GrpcServer grpc_server(cfg, "0.0.0.0:50051");
