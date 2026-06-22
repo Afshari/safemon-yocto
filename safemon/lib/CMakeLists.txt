@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 enable_testing()
 
+add_subdirectory(common)
 add_subdirectory(ecdsa)
 add_subdirectory(config)
 add_subdirectory(fault_detector)
+add_subdirectory(can_bridge)

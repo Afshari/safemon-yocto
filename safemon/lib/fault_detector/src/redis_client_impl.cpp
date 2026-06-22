@@ -34,3 +34,10 @@ void RedisClient::publish_fault(const std::string& level,
         redis_, "SET safemon:faults:current %s", fault.c_str());
     if (reply) freeReplyObject(reply);
 }
+
+void RedisClient::push_frame(const std::string& frame)
+{
+    redisReply* reply = (redisReply*)redisCommand(
+        redis_, "LPUSH safemon:can:frames %s", frame.c_str());
+    if (reply) freeReplyObject(reply);
+}

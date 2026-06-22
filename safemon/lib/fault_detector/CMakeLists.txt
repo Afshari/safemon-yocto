@@ -13,7 +13,7 @@ target_include_directories(fault_detector
 )
 
 target_link_libraries(fault_detector
-    PUBLIC config
+    PUBLIC config common
     PRIVATE ${HIREDIS_LIB}
 )
 
