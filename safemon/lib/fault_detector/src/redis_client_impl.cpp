@@ -31,7 +31,7 @@ void RedisClient::publish_fault(const std::string& level,
 {
     std::string fault = level + ":" + message;
     redisReply* reply = (redisReply*)redisCommand(
-        redis_, "SET safemon:faults:current %s", fault.c_str());
+        redis_, "SET safemon:faults:current %s EX 3", fault.c_str());
     if (reply) freeReplyObject(reply);
 }
 

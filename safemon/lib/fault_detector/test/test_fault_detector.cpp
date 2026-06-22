@@ -153,3 +153,38 @@ TEST(FaultDetector, ErrorTimeoutOverridesUnknownId)
     std::this_thread::sleep_for(std::chrono::milliseconds(20));
     detector.stop();
 }
+
+TEST(FaultDetector, PublishFaultIncludesLevelAndMessage)
+{
+    auto mock = std::make_unique<MockRedisClient>();
+
+    EXPECT_CALL(*mock, get_latest_frame())
+        .WillRepeatedly(Return("123#DEADBEEF"));
+
+    // verify the exact string format passed to publish_fault
+    EXPECT_CALL(*mock, publish_fault("OK", "NO_FAULT"))
+        .Times(AtLeast(1));
+
+    FaultDetector detector(make_config(), std::move(mock), 0);
+    detector.start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    detector.stop();
+}
+
+TEST(FaultDetector, PublishFaultCalledOnEveryInterval)
+{
+    auto mock = std::make_unique<MockRedisClient>();
+
+    EXPECT_CALL(*mock, get_latest_frame())
+        .WillRepeatedly(Return("123#DEADBEEF"));
+
+    // with interval=0, publish_fault should be called many times
+    // this verifies the TTL refresh keeps happening while app runs
+    EXPECT_CALL(*mock, publish_fault(_, _))
+        .Times(AtLeast(5));
+
+    FaultDetector detector(make_config(), std::move(mock), 0);
+    detector.start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    detector.stop();
+}
