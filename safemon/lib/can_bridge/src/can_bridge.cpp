@@ -25,6 +25,7 @@ void CanBridge::start()
 
 void CanBridge::stop()
 {
+    if (!running_) return;  // already stopped
     running_ = false;
     can_reader_->close();
     if (thread_.joinable())
