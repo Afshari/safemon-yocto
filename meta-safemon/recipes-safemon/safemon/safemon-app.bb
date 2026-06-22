@@ -42,14 +42,18 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/fault_detector/inc/fault_rules.h \
            file://safemon/lib/fault_detector/inc/fault_detector.h \
            file://safemon/lib/fault_detector/CMakeLists.txt \
-           file://safemon.conf \
-           file://safemon.conf.sig \
-           file://safemon-qemu.conf \
-           file://safemon-qemu.conf.sig \
+           file://rpi4/safemon.conf \
+           file://rpi4/safemon.conf.sig \
+           file://jetson/safemon.conf \
+           file://jetson/safemon.conf.sig \
+           file://jetson/safemon-display.service \
+           file://qemu/safemon.conf \
+           file://qemu/safemon.conf.sig \
+           file://fonts/JetBrainsMono-Regular.ttf \
+           file://fault_data.json \
            file://safemon.pub \
            file://safemon-app.service \
            file://safemon-display.service \
-           file://safemon-display-jetson.service \
            file://safemon/proto/fault.proto \
            file://safemon/proto/fault.pb.cc \
            file://safemon/proto/fault.pb.h \
@@ -73,7 +77,6 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/src/display/dashboard.cpp \
            file://safemon/inc/display/dashboard.h \
            file://safemon/inc/third_party/nlohmann \
-           file://JetBrainsMono-Regular.ttf \
           "
 
 S = "${WORKDIR}/safemon"
@@ -100,14 +103,19 @@ do_install:append() {
     install -d ${D}${sysconfdir}/safemon
     
     if [ "${MACHINE}" = "qemuarm64" ]; then
-        install -m 0644 ${WORKDIR}/safemon-qemu.conf \
+        install -m 0644 ${WORKDIR}/qemu/safemon.conf \
             ${D}${sysconfdir}/safemon/safemon.conf
-        install -m 0644 ${WORKDIR}/safemon-qemu.conf.sig \
+        install -m 0644 ${WORKDIR}/qemu/safemon.conf.sig \
+            ${D}${sysconfdir}/safemon/safemon.conf.sig
+    elif [ "${MACHINE}" = "jetson-orin-nano-devkit" ]; then
+        install -m 0644 ${WORKDIR}/jetson/safemon.conf \
+            ${D}${sysconfdir}/safemon/safemon.conf
+        install -m 0644 ${WORKDIR}/jetson/safemon.conf.sig \
             ${D}${sysconfdir}/safemon/safemon.conf.sig
     else
-        install -m 0644 ${WORKDIR}/safemon.conf \
+        install -m 0644 ${WORKDIR}/rpi4/safemon.conf \
             ${D}${sysconfdir}/safemon/safemon.conf
-        install -m 0644 ${WORKDIR}/safemon.conf.sig \
+        install -m 0644 ${WORKDIR}/rpi4/safemon.conf.sig \
             ${D}${sysconfdir}/safemon/safemon.conf.sig
     fi
 
@@ -115,8 +123,11 @@ do_install:append() {
     install -m 0644 ${WORKDIR}/safemon.pub \
         ${D}${sysconfdir}/safemon/pki/safemon.pub
 
-    install -m 0644 ${WORKDIR}/JetBrainsMono-Regular.ttf \
+    install -m 0644 ${WORKDIR}/fonts/JetBrainsMono-Regular.ttf \
         ${D}${sysconfdir}/safemon/JetBrainsMono-Regular.ttf
+
+    install -m 0644 ${WORKDIR}/fault_data.json \
+        ${D}${sysconfdir}/safemon/fault_data.json
 
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/safemon-app.service \
@@ -124,7 +135,7 @@ do_install:append() {
 
     # Install platform-specific display service
     if [ "${MACHINE}" = "jetson-orin-nano-devkit" ]; then
-        install -m 0644 ${WORKDIR}/safemon-display-jetson.service \
+        install -m 0644 ${WORKDIR}/jetson/safemon-display.service \
             ${D}${systemd_system_unitdir}/safemon-display.service
     else
         install -m 0644 ${WORKDIR}/safemon-display.service \
@@ -141,6 +152,7 @@ FILES:${PN} += "${bindir}/safemon-app \
                 ${bindir}/drm-display \
                 ${bindir}/egl-triangle \
                 ${bindir}/safemon-display \
+                ${sysconfdir}/safemon/fault_data.json \
                 ${sysconfdir}/safemon/safemon.conf \
                 ${sysconfdir}/safemon/safemon.conf.sig \
                 ${sysconfdir}/safemon/pki/safemon.pub \
