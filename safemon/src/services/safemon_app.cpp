@@ -7,8 +7,10 @@
 #include "ecdsa_verify_file.h"
 #include "grpc_server.h"
 #include "redis_client_impl.h"
+#include "ican_reader.h"
 #include "can_reader.h"
 #include "can_bridge.h"
+#include "frame_store.h"
 
 static volatile bool running = true;
 
@@ -40,8 +42,9 @@ int main()
     grpc_server.start();
 
     CanBridge can_bridge(
-        std::make_unique<CanReader>("vcan0"),
-        std::make_unique<RedisClient>(cfg.redis_host, cfg.redis_port)
+        static_cast<std::unique_ptr<ICanReader>>(std::make_unique<CanReader>("vcan0")),
+        static_cast<std::unique_ptr<IFrameStore>>(
+            std::make_unique<RedisClient>(cfg.redis_host, cfg.redis_port))
     );
     can_bridge.start();
 

@@ -20,7 +20,6 @@ set(PROTO_SRC
 # ---------------------------------------------------------------------------
 add_executable(safemon-app
     src/services/safemon_app.cpp
-    src/services/can_reader.cpp
     src/services/grpc_server.cpp
     ${PROTO_SRC}
 )
@@ -30,11 +29,14 @@ target_include_directories(safemon-app PRIVATE
     ${HIREDIS_INCLUDE}
     ${Protobuf_INCLUDE_DIRS}
     proto
+    lib/can_bridge/inc
+    lib/common/inc
 )
 
 target_link_libraries(safemon-app PRIVATE
     config
     fault_detector
+    can_bridge
     ecdsa
     ${HIREDIS_LIB}
     protobuf::libprotobuf
