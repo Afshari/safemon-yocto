@@ -1,0 +1,4 @@
+PyQt6>=6.4.0
+paramiko>=3.0.0
+grpcio>=1.50.0
+protobuf>=4.0.0
