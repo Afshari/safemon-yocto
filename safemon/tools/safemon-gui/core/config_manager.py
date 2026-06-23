@@ -116,5 +116,5 @@ def load_device_files() -> dict:
     return load("device_files.json")
 
 def _write_json(path: Path, data: dict) -> None:
-    with open(path, "w", encoding="utf-8") as f:
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(data, f, indent=2)

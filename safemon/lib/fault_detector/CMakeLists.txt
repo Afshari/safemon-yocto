@@ -4,6 +4,7 @@ find_path(HIREDIS_INCLUDE hiredis/hiredis.h REQUIRED)
 add_library(fault_detector
     src/fault_rules.cpp
     src/fault_detector.cpp
+    src/redis_client_impl.cpp
 )
 
 target_include_directories(fault_detector
@@ -12,7 +13,7 @@ target_include_directories(fault_detector
 )
 
 target_link_libraries(fault_detector
-    PUBLIC config
+    PUBLIC config common
     PRIVATE ${HIREDIS_LIB}
 )
 

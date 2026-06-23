@@ -152,7 +152,7 @@ def save_keypair(path, private_key, public_key):
         'public_key_y': int_to_limbs(public_key.y),
     }
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, 'w') as f:
+    with open(path, 'w', newline='\n') as f:
         json.dump(data, f, indent=4)
 
 def save_pubkey(path, public_key):
@@ -162,7 +162,7 @@ def save_pubkey(path, public_key):
         'public_key_y': int_to_limbs(public_key.y),
     }
     os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-    with open(path, 'w') as f:
+    with open(path, 'w', newline='\n') as f:
         json.dump(data, f, indent=4)
 
 # ---------------------------------------------------------------------------
@@ -170,7 +170,7 @@ def save_pubkey(path, public_key):
 # ---------------------------------------------------------------------------
 
 def save_signature(path, r, s):
-    with open(path, 'w') as f:
+    with open(path, 'w', newline='\n') as f:
         f.write(format(r, '064x') + '\n')
         f.write(format(s, '064x') + '\n')
 
