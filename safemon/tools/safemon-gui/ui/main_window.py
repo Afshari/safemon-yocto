@@ -15,6 +15,7 @@ from ui.device_status import DeviceStatusTab
 from core.device_session import DeviceSession
 from ui.device_topbar import DeviceTopBar
 from ui.device_files import DeviceFilesTab
+from ui.fault_monitor import FaultMonitorTab
 
 class MainWindow(QMainWindow):
 
@@ -46,7 +47,7 @@ class MainWindow(QMainWindow):
         # --- Placeholder tabs - each will be replaced with real widget ---
         self.tabs.addTab(KeyManagementTab(self.session),   "Key Management")
         self.tabs.addTab(SignVerifyTab(),                  "Sign / Verify")
-        self.tabs.addTab(_placeholder("Fault Monitor"),   "Fault Monitor")
+        self.tabs.addTab(FaultMonitorTab(self.session),    "Fault Monitor")
         self.tabs.addTab(DeviceFilesTab(self.session),      "Device Files")
         self.tabs.addTab(DeviceStatusTab(self.session),     "Device Status")
 

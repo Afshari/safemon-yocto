@@ -6,6 +6,11 @@ Initializes config files on first run, then launches the main window.
 import sys
 from pathlib import Path
 
+SAFEMON_SIGN_DIR = Path(__file__).resolve().parent.parent / "safemon-sign"
+PROTO_DIR = Path(__file__).resolve().parent.parent.parent / "proto"
+sys.path.insert(0, str(SAFEMON_SIGN_DIR))
+sys.path.insert(0, str(PROTO_DIR))
+
 from PyQt6.QtWidgets import QApplication, QStyleFactory
 from PyQt6.QtGui import QIcon
 
