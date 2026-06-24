@@ -1,15 +1,18 @@
 """
 device_files.py - Device Files tab.
-Pull, edit, and push important text files (config, signature, boot, etc.)
-to/from the device using the shared SSH session.
+Two sections:
+  1. Known Files - predefined config/sig files with fixed device paths, read-only preview
+  2. File Transfer - copy any local file to a custom destination path on the device
 """
 
+import os
+import tempfile
 from pathlib import Path
 
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QLineEdit, QFileDialog, QGroupBox, QComboBox, QTextEdit,
-    QMessageBox
+    QMessageBox, QFrame
 )
 from PyQt6.QtCore import Qt
 
@@ -24,6 +27,8 @@ class DeviceFilesTab(QWidget):
         super().__init__(parent)
         self._session = session
         self._files = load_device_files()
+        self._local_known_path = None
+        self._local_transfer_path = None
         self._build_ui()
 
     def _build_ui(self):
@@ -48,40 +53,81 @@ class DeviceFilesTab(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
-        file_group = QGroupBox("File")
-        file_layout = QVBoxLayout(file_group)
-        file_layout.setSpacing(6)
+        layout.addWidget(self._build_known_files_group())
+        layout.addWidget(self._build_divider())
+        layout.addWidget(self._build_transfer_group())
+        layout.addStretch()
+
+        return panel
+
+    def _build_known_files_group(self):
+        group = QGroupBox("Known Files")
+        layout = QVBoxLayout(group)
+        layout.setSpacing(6)
 
         self._file_combo = QComboBox()
         self._file_combo.addItems(list(self._files.keys()))
-        self._file_combo.currentTextChanged.connect(self._on_file_selected)
+        self._file_combo.currentTextChanged.connect(self._on_known_file_selected)
 
-        self._path_field = QLineEdit()
-        self._path_field.setReadOnly(True)
+        self._device_path_label = QLabel("Device: -")
+        self._device_path_label.setStyleSheet("color: grey; font-size: 11px;")
+        self._device_path_label.setWordWrap(True)
 
-        file_layout.addWidget(QLabel("Known file:"))
-        file_layout.addWidget(self._file_combo)
-        file_layout.addWidget(QLabel("Device path:"))
-        file_layout.addWidget(self._path_field)
+        self._local_known_label = QLabel("Local: -")
+        self._local_known_label.setStyleSheet("color: grey; font-size: 11px;")
+        self._local_known_label.setWordWrap(True)
 
-        browse_btn = QPushButton("Browse Local File")
-        browse_btn.clicked.connect(self._browse_local_file)
+        browse_known_btn = QPushButton("Browse Local File")
+        browse_known_btn.clicked.connect(self._browse_known_file)
 
         load_btn = QPushButton("Load from Device")
         load_btn.clicked.connect(self._load_from_device)
 
-        push_btn = QPushButton("Copy to Device")
-        push_btn.clicked.connect(self._copy_to_device)
+        copy_known_btn = QPushButton("Copy to Device")
+        copy_known_btn.clicked.connect(self._copy_known_to_device)
 
-        layout.addWidget(file_group)
-        layout.addWidget(browse_btn)
+        layout.addWidget(QLabel("File:"))
+        layout.addWidget(self._file_combo)
+        layout.addWidget(self._device_path_label)
+        layout.addWidget(self._local_known_label)
+        layout.addWidget(browse_known_btn)
         layout.addWidget(load_btn)
-        layout.addWidget(push_btn)
-        layout.addStretch()
+        layout.addWidget(copy_known_btn)
 
-        self._on_file_selected(self._file_combo.currentText())
+        self._on_known_file_selected(self._file_combo.currentText())
+        return group
 
-        return panel
+    def _build_divider(self):
+        line = QFrame()
+        line.setFrameShape(QFrame.Shape.HLine)
+        line.setStyleSheet("color: #666;")
+        return line
+
+    def _build_transfer_group(self):
+        group = QGroupBox("File Transfer")
+        layout = QVBoxLayout(group)
+        layout.setSpacing(6)
+
+        self._transfer_local_label = QLabel("Local: -")
+        self._transfer_local_label.setStyleSheet("color: grey; font-size: 11px;")
+        self._transfer_local_label.setWordWrap(True)
+
+        browse_transfer_btn = QPushButton("Browse Local File")
+        browse_transfer_btn.clicked.connect(self._browse_transfer_file)
+
+        self._dest_field = QLineEdit()
+        self._dest_field.setPlaceholderText("Destination path on device (e.g. /home/root/)")
+
+        copy_transfer_btn = QPushButton("Copy to Device")
+        copy_transfer_btn.clicked.connect(self._copy_transfer_to_device)
+
+        layout.addWidget(self._transfer_local_label)
+        layout.addWidget(browse_transfer_btn)
+        layout.addWidget(QLabel("Destination on device:"))
+        layout.addWidget(self._dest_field)
+        layout.addWidget(copy_transfer_btn)
+
+        return group
 
     # ------------------------------------------------------------------
     # Right panel
@@ -93,11 +139,16 @@ class DeviceFilesTab(QWidget):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(8)
 
-        header = QLabel("File Content")
+        header = QLabel("File Preview")
         header.setStyleSheet("font-size: 14px; color: grey;")
 
         self._content_box = QTextEdit()
-        self._content_box.setPlaceholderText("Load a file from the device, or browse a local file...")
+        self._content_box.setReadOnly(True)
+        self._content_box.setPlaceholderText(
+            "Select a known file and click 'Browse Local File' or "
+            "'Load from Device' to preview its content here.\n\n"
+            "Files in the File Transfer section do not show a preview."
+        )
 
         self._log_box = QTextEdit()
         self._log_box.setReadOnly(True)
@@ -111,38 +162,35 @@ class DeviceFilesTab(QWidget):
         return panel
 
     # ------------------------------------------------------------------
-    # File selection
+    # Known Files - handlers
     # ------------------------------------------------------------------
 
-    def _on_file_selected(self, friendly_name):
+    def _on_known_file_selected(self, friendly_name):
         device_path = self._files.get(friendly_name, "")
-        self._path_field.setText(device_path)
+        self._device_path_label.setText(f"Device: {device_path}")
+        self._local_known_label.setText("Local: -")
+        self._local_known_path = None
+        if hasattr(self, "_content_box"):
+            self._content_box.clear()
 
-    # ------------------------------------------------------------------
-    # Browse local
-    # ------------------------------------------------------------------
-
-    def _browse_local_file(self):
+    def _browse_known_file(self):
         path, _ = QFileDialog.getOpenFileName(self, "Select Local File")
         if not path:
             return
+        self._local_known_path = path
+        self._local_known_label.setText(f"Local: {path}")
         try:
             with open(path, "r", encoding="utf-8", errors="replace") as f:
                 content = f.read()
+            self._content_box.setPlainText(content)
         except Exception as e:
-            self._log(f"ERROR: Could not read local file: {e}")
-            return
-        self._content_box.setPlainText(content)
-        self._log(f"Loaded local file into editor: {path}")
-
-    # ------------------------------------------------------------------
-    # Load from device
-    # ------------------------------------------------------------------
+            self._log(f"ERROR: Could not read file for preview: {e}")
 
     def _load_from_device(self):
-        device_path = self._path_field.text().strip()
+        friendly_name = self._file_combo.currentText()
+        device_path = self._files.get(friendly_name, "")
         if not device_path:
-            self._log("ERROR: No device path selected.")
+            self._log("ERROR: No device path for selected file.")
             return
 
         host, port, username, password, platform_key = self._connection_info()
@@ -160,8 +208,6 @@ class DeviceFilesTab(QWidget):
         self._load_worker.start()
 
     def _do_load(self, device_path, host, port, username, password):
-        import tempfile, os
-
         mgr = SSHManager(host, port, username, password)
         mgr.connect()
         try:
@@ -177,26 +223,18 @@ class DeviceFilesTab(QWidget):
 
     def _on_load_success(self, content):
         self._content_box.setPlainText(content)
-        self._log("OK: File loaded from device.")
+        self._log("OK: File loaded from device (read-only preview).")
 
     def _on_load_failed(self, error_text):
         self._log(f"ERROR: {error_text}")
 
-    # ------------------------------------------------------------------
-    # Copy to device
-    # ------------------------------------------------------------------
-
-    def _copy_to_device(self):
-        device_path = self._path_field.text().strip()
-        if not device_path:
-            self._log("ERROR: No device path selected.")
+    def _copy_known_to_device(self):
+        if not self._local_known_path:
+            self._log("ERROR: No local file selected. Use Browse to select a file first.")
             return
 
-        content = self._content_box.toPlainText()
-        if not content:
-            self._log("ERROR: Nothing to copy - the content box is empty.")
-            return
-
+        friendly_name = self._file_combo.currentText()
+        device_path = self._files.get(friendly_name, "")
         host, port, username, password, platform_key = self._connection_info()
         if not host:
             self._log(f"ERROR: No host configured for {platform_key}.")
@@ -213,36 +251,95 @@ class DeviceFilesTab(QWidget):
             self._log("Copy cancelled.")
             return
 
-        self._log(f"Copying to {device_path} on {platform_key}...")
+        self._log(f"Copying {self._local_known_path} -> {platform_key}:{device_path} ...")
 
-        self._push_worker = Worker(
-            self._do_push, content, device_path, host, port, username, password
+        self._copy_worker = Worker(
+            self._do_copy, self._local_known_path, device_path, host, port, username, password
         )
-        self._push_worker.finished_ok.connect(self._on_push_success)
-        self._push_worker.failed.connect(self._on_push_failed)
-        self._push_worker.start()
+        self._copy_worker.finished_ok.connect(self._on_copy_success)
+        self._copy_worker.failed.connect(self._on_copy_failed)
+        self._copy_worker.start()
 
-    def _do_push(self, content, device_path, host, port, username, password):
-        import tempfile, os
+    # ------------------------------------------------------------------
+    # File Transfer - handlers
+    # ------------------------------------------------------------------
 
-        fd, tmp_path = tempfile.mkstemp()
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
-            f.write(content)
+    def _browse_transfer_file(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Select Local File")
+        if not path:
+            return
+        self._local_transfer_path = path
+        self._transfer_local_label.setText(f"Local: {path}")
+        self._content_box.setPlaceholderText(
+            f"'{Path(path).name}' selected for transfer.\n\n"
+            "No preview available for File Transfer section."
+        )
+        self._content_box.clear()
 
+    def _copy_transfer_to_device(self):
+        if not self._local_transfer_path:
+            self._log("ERROR: No local file selected. Use Browse to select a file first.")
+            return
+
+        dest = self._dest_field.text().strip()
+        if not dest:
+            self._log("ERROR: No destination path entered.")
+            return
+
+        host, port, username, password, platform_key = self._connection_info()
+        if not host:
+            self._log(f"ERROR: No host configured for {platform_key}.")
+            return
+
+        filename = Path(self._local_transfer_path).name
+        if dest.endswith("/"):
+            dest = dest + filename
+        else:
+            # if dest looks like a directory (no extension), append filename automatically
+            remote_path = Path(dest)
+            if "." not in remote_path.name:
+                dest = dest + "/" + filename
+
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Copy to Device",
+            f"Copy:\n{self._local_transfer_path}\n\nTo {platform_key}:\n{dest}\n\nAre you sure?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            self._log("Copy cancelled.")
+            return
+
+        self._log(f"Copying {self._local_transfer_path} -> {platform_key}:{dest} ...")
+
+        self._transfer_worker = Worker(
+            self._do_copy, self._local_transfer_path, dest, host, port, username, password
+        )
+        self._transfer_worker.finished_ok.connect(self._on_copy_success)
+        self._transfer_worker.failed.connect(self._on_copy_failed)
+        self._transfer_worker.start()
+
+    # ------------------------------------------------------------------
+    # Shared copy task
+    # ------------------------------------------------------------------
+
+    def _do_copy(self, local_path, device_path, host, port, username, password):
         mgr = SSHManager(host, port, username, password)
         mgr.connect()
         try:
-            mgr.put_file(tmp_path, device_path)
+            import posixpath
+            remote_dir = posixpath.dirname(device_path)
+            mgr.run_command(f"mkdir -p {remote_dir}")
+            mgr.put_file(local_path, device_path)
         finally:
             mgr.close()
-            os.remove(tmp_path)
-
         return device_path
 
-    def _on_push_success(self, device_path):
+    def _on_copy_success(self, device_path):
         self._log(f"OK: File copied to device -> {device_path}")
 
-    def _on_push_failed(self, error_text):
+    def _on_copy_failed(self, error_text):
         self._log(f"ERROR: {error_text}")
 
     # ------------------------------------------------------------------

@@ -77,25 +77,25 @@ class SignVerifyTab(QWidget):
         verify_file_btn = QPushButton("Choose File")
         verify_file_btn.clicked.connect(self._browse_verify_file)
 
-        self._verify_pub_field = QLineEdit()
-        self._verify_pub_field.setPlaceholderText("Public key (.pub)")
-        verify_pub_btn = QPushButton("Choose Public Key")
-        verify_pub_btn.clicked.connect(self._browse_verify_pub)
-
         self._verify_sig_field = QLineEdit()
         self._verify_sig_field.setPlaceholderText("Signature (.sig)")
         verify_sig_btn = QPushButton("Choose Signature")
         verify_sig_btn.clicked.connect(self._browse_verify_sig)
+
+        self._verify_pub_field = QLineEdit()
+        self._verify_pub_field.setPlaceholderText("Public key (.pub)")
+        verify_pub_btn = QPushButton("Choose Public Key")
+        verify_pub_btn.clicked.connect(self._browse_verify_pub)
 
         verify_btn = QPushButton("Verify")
         verify_btn.clicked.connect(self._do_verify)
 
         verify_layout.addWidget(self._verify_file_field)
         verify_layout.addWidget(verify_file_btn)
-        verify_layout.addWidget(self._verify_pub_field)
-        verify_layout.addWidget(verify_pub_btn)
         verify_layout.addWidget(self._verify_sig_field)
         verify_layout.addWidget(verify_sig_btn)
+        verify_layout.addWidget(self._verify_pub_field)
+        verify_layout.addWidget(verify_pub_btn)
         verify_layout.addWidget(verify_btn)
 
         layout.addWidget(sign_group)

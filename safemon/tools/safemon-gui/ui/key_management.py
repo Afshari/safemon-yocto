@@ -14,7 +14,7 @@ sys.path.insert(0, str(SAFEMON_SIGN_DIR))
 from PyQt6.QtWidgets import (
     QWidget, QHBoxLayout, QVBoxLayout, QLabel, QPushButton,
     QLineEdit, QFileDialog, QGroupBox, QComboBox, QTextEdit,
-    QSizePolicy
+    QMessageBox
 )
 from PyQt6.QtCore import Qt
 from core.workers import Worker
@@ -75,9 +75,23 @@ class KeyManagementTab(QWidget):
         scp_layout = QVBoxLayout(scp_group)
         scp_layout.setSpacing(6)
 
+        self._pub_key_field = QLineEdit()
+        self._pub_key_field.setPlaceholderText("Public key (.pub)")
+        browse_pub_btn = QPushButton("Browse Public Key")
+        browse_pub_btn.clicked.connect(self._browse_pub_key)
+
+        self._device_dest_field = QLineEdit("/etc/safemon/pki/safemon.pub")
+        self._device_dest_field.setReadOnly(True)
+        self._device_dest_field.setStyleSheet("color: grey;")
+
         self._scp_btn = QPushButton("Copy Public Key to Device")
         self._scp_btn.clicked.connect(self._copy_pubkey_to_device)
 
+        scp_layout.addWidget(QLabel("Public key to copy:"))
+        scp_layout.addWidget(self._pub_key_field)
+        scp_layout.addWidget(browse_pub_btn)
+        scp_layout.addWidget(QLabel("Destination on device:"))
+        scp_layout.addWidget(self._device_dest_field)
         scp_layout.addWidget(self._scp_btn)
 
         # --- Assemble ---
@@ -169,11 +183,13 @@ class KeyManagementTab(QWidget):
         
         
     def _copy_pubkey_to_device(self):
-        key_dir = Path(self._key_dir_field.text().strip())
-        pub_path = key_dir / "safemon.pub"
+        pub_path = self._pub_key_field.text().strip()
+        if not pub_path:
+            self._log("ERROR: No public key selected. Use Browse to select a .pub file first.")
+            return
 
-        if not pub_path.exists():
-            self._log(f"ERROR: Public key not found at {pub_path}. Generate a key pair first.")
+        if not Path(pub_path).exists():
+            self._log(f"ERROR: Public key not found at {pub_path}.")
             return
 
         platform_key = self._session.platform_key
@@ -182,15 +198,27 @@ class KeyManagementTab(QWidget):
         port = config.get("port", 22)
         username = self._session.username or "root"
         password = self._session.password
+        device_dest = self._device_dest_field.text()
 
         if not host:
-            self._log(f"ERROR: No host configured for {platform_key}. Check config/{platform_key}.json")
+            self._log(f"ERROR: No host configured for {platform_key}.")
             return
 
-        self._log(f"Copying {pub_path} -> {username}@{host}:/etc/safemon/pki/safemon.pub ...")
+        confirm = QMessageBox.question(
+            self,
+            "Confirm Copy to Device",
+            f"This will overwrite:\n\n{device_dest}\n\non {platform_key}.\n\nAre you sure?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            self._log("Copy cancelled.")
+            return
+
+        self._log(f"Copying {pub_path} -> {username}@{host}:{device_dest} ...")
 
         self._scp_worker = Worker(
-            self._do_copy_pubkey, str(pub_path), host, port, username, password
+            self._do_copy_pubkey, pub_path, host, port, username, password, device_dest
         )
         self._scp_worker.finished_ok.connect(self._on_copy_success)
         self._scp_worker.failed.connect(self._on_copy_failed)
@@ -211,3 +239,22 @@ class KeyManagementTab(QWidget):
 
     def _on_copy_failed(self, error_text):
         self._log(f"ERROR: {error_text}")
+        
+    def _browse_pub_key(self):
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Public Key", filter="Pub files (*.pub)"
+        )
+        if path:
+            self._pub_key_field.setText(path)
+            
+    def _do_copy_pubkey(self, local_pub_path, host, port, username, password, device_dest):
+        import posixpath
+        mgr = SSHManager(host, port, username, password)
+        mgr.connect()
+        try:
+            remote_dir = posixpath.dirname(device_dest)
+            mgr.run_command(f"mkdir -p {remote_dir}")
+            mgr.put_file(local_pub_path, device_dest)
+        finally:
+            mgr.close()
+        return device_dest
