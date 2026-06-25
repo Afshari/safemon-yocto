@@ -26,22 +26,28 @@ add_executable(safemon-app
 
 target_include_directories(safemon-app PRIVATE
     inc/services
+    lib/can_bridge/inc
+    lib/common/inc
+    lib/grpc_server/inc
     ${HIREDIS_INCLUDE}
     ${Protobuf_INCLUDE_DIRS}
     proto
-    lib/can_bridge/inc
-    lib/common/inc
 )
 
 target_link_libraries(safemon-app PRIVATE
     config
     fault_detector
     can_bridge
+    grpc_server
     ecdsa
     ${HIREDIS_LIB}
     protobuf::libprotobuf
     gRPC::grpc++
     ${ABSEIL_LIBS}
+)
+
+target_include_directories(grpc_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/proto
 )
 
 # ---------------------------------------------------------------------------

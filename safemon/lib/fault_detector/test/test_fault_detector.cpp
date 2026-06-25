@@ -21,6 +21,7 @@ public:
     MOCK_METHOD(void, publish_fault,
                 (const std::string& level, const std::string& message),
                 (override));
+    MOCK_METHOD(std::string, get_fault_status, (), (override));
 };
 
 // ---------------------------------------------------------------------------

@@ -22,6 +22,8 @@ public:
     // IFrameStore
     void push_frame(const std::string& frame) override;
 
+    std::string get_fault_status() override;
+
     bool is_connected() const { return redis_ && !redis_->err; }
 
 private:
