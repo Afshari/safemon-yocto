@@ -20,7 +20,6 @@ set(PROTO_SRC
 # ---------------------------------------------------------------------------
 add_executable(safemon-app
     src/services/safemon_app.cpp
-    src/services/grpc_server.cpp
     ${PROTO_SRC}
 )
 
