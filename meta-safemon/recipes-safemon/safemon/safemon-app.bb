@@ -36,6 +36,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/common/CMakeLists.txt \
            file://safemon/lib/common/inc/redis_client.h \
            file://safemon/lib/common/inc/frame_store.h \
+           file://safemon/lib/common/inc/dashboard_state.h \
            file://safemon/lib/fault_detector/src/fault_rules.cpp \
            file://safemon/lib/fault_detector/src/fault_detector.cpp \
            file://safemon/lib/fault_detector/inc/fault_rules.h \
@@ -54,6 +55,9 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/grpc_server/inc/fault_event_builder.h \
            file://safemon/lib/grpc_server/src/grpc_server.cpp \
            file://safemon/lib/grpc_server/src/fault_event_builder.cpp \
+           file://safemon/lib/display_reader/CMakeLists.txt \
+           file://safemon/lib/display_reader/inc/display_reader.h \
+           file://safemon/lib/display_reader/src/display_reader.cpp \
            file://rpi4/safemon.conf \
            file://rpi4/safemon.conf.sig \
            file://jetson/safemon.conf \

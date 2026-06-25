@@ -1,26 +1,11 @@
 #pragma once
 #include <glm/glm.hpp>
 #include <string>
+#include "dashboard_state.h"
 #include "glass_panel.h"
 #include "text_renderer.h"
 
 namespace Safemon {
-
-    struct DashboardState
-    {
-        bool        can_ok          = true;
-        bool        redis_ok        = true;
-        std::string fault_code      = "ERROR : TIMEOUT";
-        std::string fault_detail1   = "No new frame received 5.2s";
-        std::string fault_detail2   = "Last known ID 0x456";
-        std::string last_frame      = "0x456 - 8B";
-        std::string last_frame_time = "07:14:52.118";
-        long        frame_count     = 1248;
-        std::string uptime          = "02:41:09";
-        std::string clock           = "15:21:08";
-        std::string footer_machine  = "RPI4";
-        std::string footer_build    = "BUILD 2026.06.20";
-    };
 
     class Dashboard
     {

@@ -52,3 +52,14 @@ std::string RedisClient::get_fault_status()
     if (reply) freeReplyObject(reply);
     return result;
 }
+
+long RedisClient::get_frame_count()
+{
+    redisReply* reply = (redisReply*)redisCommand(
+        redis_, "LLEN safemon:can:frames");
+    long result = 0;
+    if (reply && reply->type == REDIS_REPLY_INTEGER)
+        result = reply->integer;
+    if (reply) freeReplyObject(reply);
+    return result;
+}

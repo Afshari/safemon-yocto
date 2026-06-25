@@ -107,6 +107,7 @@ add_executable(safemon-display
     src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
+
 if(PLATFORM_DEPS_TARGET)
     add_dependencies(safemon-display ${PLATFORM_DEPS_TARGET})
 endif()
@@ -114,6 +115,8 @@ endif()
 target_include_directories(safemon-display PRIVATE
     inc/display
     inc/third_party
+    lib/common/inc
+    lib/display_reader/inc
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
@@ -123,6 +126,7 @@ target_include_directories(safemon-display PRIVATE
 target_link_libraries(safemon-display PRIVATE
     config
     ecdsa
+    display_reader
     ${EGL_LIB}
     ${GLES2_LIB}
     ${DISPLAY_EXTRA_LIBS}

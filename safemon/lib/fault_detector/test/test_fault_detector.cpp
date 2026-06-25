@@ -22,6 +22,7 @@ public:
                 (const std::string& level, const std::string& message),
                 (override));
     MOCK_METHOD(std::string, get_fault_status, (), (override));
+    MOCK_METHOD(long, get_frame_count, (), (override));
 };
 
 // ---------------------------------------------------------------------------

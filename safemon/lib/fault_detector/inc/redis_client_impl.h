@@ -24,6 +24,8 @@ public:
 
     std::string get_fault_status() override;
 
+    long get_frame_count() override;
+
     bool is_connected() const { return redis_ && !redis_->err; }
 
 private:
