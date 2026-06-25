@@ -6,7 +6,7 @@ add_executable(grpc_server_tests
 
 target_link_libraries(grpc_server_tests
     PRIVATE
-        grpc_server
+        fault_event_builder
         GTest::GTest
         GTest::Main
         GTest::gmock

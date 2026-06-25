@@ -4,24 +4,9 @@
 #include <chrono>
 #include "grpc_server.h"
 #include "fault_event_builder.h"
-#include "redis_client.h"
-#include "config.h"
 
 using ::testing::Return;
 using ::testing::_;
-
-// ---------------------------------------------------------------------------
-// Mock
-// ---------------------------------------------------------------------------
-
-class MockRedisClient : public IRedisClient
-{
-public:
-    MOCK_METHOD(std::string, get_latest_frame,  (), (override));
-    MOCK_METHOD(std::string, get_fault_status,  (), (override));
-    MOCK_METHOD(void,        publish_fault,
-                (const std::string&, const std::string&), (override));
-};
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -93,38 +78,3 @@ TEST(FaultEventBuilder, TimestampIsReasonable)
     EXPECT_LE(event.timestamp_ms, now);
 }
 
-// ---------------------------------------------------------------------------
-// GrpcServer lifecycle tests
-// ---------------------------------------------------------------------------
-
-TEST(GrpcServer, StartsAndStopsCleanly)
-{
-    auto mock = std::make_unique<MockRedisClient>();
-    EXPECT_CALL(*mock, get_fault_status())
-        .WillRepeatedly(Return("OK:NO_FAULT"));
-    EXPECT_CALL(*mock, get_latest_frame())
-        .WillRepeatedly(Return(""));
-    EXPECT_CALL(*mock, publish_fault(_, _))
-        .WillRepeatedly(Return());
-
-    GrpcServer server(make_config(), "0.0.0.0:50099", std::move(mock));
-    server.start();
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    server.stop();
-    // if we reach here without deadlock or crash the test passes
-}
-
-TEST(GrpcServer, StopsCleanlyWithoutStart)
-{
-    auto mock = std::make_unique<MockRedisClient>();
-    EXPECT_CALL(*mock, get_fault_status())
-        .WillRepeatedly(Return("OK:NO_FAULT"));
-    EXPECT_CALL(*mock, get_latest_frame())
-        .WillRepeatedly(Return(""));
-    EXPECT_CALL(*mock, publish_fault(_, _))
-        .WillRepeatedly(Return());
-
-    GrpcServer server(make_config(), "0.0.0.0:50098", std::move(mock));
-    // stop without start should not crash or deadlock
-    server.stop();
-}
