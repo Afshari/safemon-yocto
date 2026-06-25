@@ -8,8 +8,6 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/cmake/dependencies.cmake \
            file://safemon/cmake/platform.cmake \
            file://safemon/src/services/safemon_app.cpp \
-           file://safemon/src/services/grpc_server.cpp \
-           file://safemon/inc/services/grpc_server.h \
            file://safemon/src/legacy/drm_display.cpp \
            file://safemon/src/legacy/framebuffer.cpp \
            file://safemon/inc/legacy/framebuffer.h \
@@ -38,6 +36,7 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/common/CMakeLists.txt \
            file://safemon/lib/common/inc/redis_client.h \
            file://safemon/lib/common/inc/frame_store.h \
+           file://safemon/lib/common/inc/dashboard_state.h \
            file://safemon/lib/fault_detector/src/fault_rules.cpp \
            file://safemon/lib/fault_detector/src/fault_detector.cpp \
            file://safemon/lib/fault_detector/inc/fault_rules.h \
@@ -51,8 +50,14 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/can_bridge/inc/can_bridge.h \
            file://safemon/lib/can_bridge/src/can_reader.cpp \
            file://safemon/lib/can_bridge/src/can_bridge.cpp \
-           file://safemon/lib/fault_detector/inc/redis_client_impl.h \
-           file://safemon/lib/fault_detector/src/redis_client_impl.cpp \
+           file://safemon/lib/grpc_server/CMakeLists.txt \
+           file://safemon/lib/grpc_server/inc/grpc_server.h \
+           file://safemon/lib/grpc_server/inc/fault_event_builder.h \
+           file://safemon/lib/grpc_server/src/grpc_server.cpp \
+           file://safemon/lib/grpc_server/src/fault_event_builder.cpp \
+           file://safemon/lib/display_reader/CMakeLists.txt \
+           file://safemon/lib/display_reader/inc/display_reader.h \
+           file://safemon/lib/display_reader/src/display_reader.cpp \
            file://rpi4/safemon.conf \
            file://rpi4/safemon.conf.sig \
            file://jetson/safemon.conf \
@@ -163,6 +168,7 @@ FILES:${PN} += "${bindir}/safemon-app \
                 ${bindir}/drm-display \
                 ${bindir}/egl-triangle \
                 ${bindir}/safemon-display \
+                ${bindir}/safemon-chart \
                 ${sysconfdir}/safemon/fault_data.json \
                 ${sysconfdir}/safemon/safemon.conf \
                 ${sysconfdir}/safemon/safemon.conf.sig \

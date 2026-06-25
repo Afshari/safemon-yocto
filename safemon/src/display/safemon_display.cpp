@@ -2,36 +2,21 @@
 #include <csignal>
 #include <GLES3/gl3.h>
 #include <hiredis/hiredis.h>
+#include <time.h>
+#include <fstream>
+#include <memory>
 #include "config.h"
 #include "drm_helper.h"
 #include "egl_helper.h"
 #include "ecdsa_verify_file.h"
 #include "dashboard.h"
 #include "text_renderer.h"
-#include <time.h>
-#include <ctime>
-#include <sstream>
-#include <fstream>
+#include "display_reader.h"
+#include "redis_client_impl.h"
 
-struct LastFrameTracker {
-    std::string last_seen_value;
-    time_t      last_change_time = time(nullptr);
-};
-
-static void update_frame_tracker(LastFrameTracker& tracker, const std::string& current_frame)
-{
-    if (current_frame != tracker.last_seen_value) {
-        tracker.last_seen_value = current_frame;
-        tracker.last_change_time = time(nullptr);
-    }
-}
-
-static std::string extract_can_id(const std::string& frame)
-{
-    auto pos = frame.find('#');
-    if (pos == std::string::npos) return "----";
-    return "0x" + frame.substr(0, pos);
-}
+// ---------------------------------------------------------------------------
+// Helpers that stay here (display/system, not Redis logic)
+// ---------------------------------------------------------------------------
 
 static std::string format_clock()
 {
@@ -39,7 +24,8 @@ static std::string format_clock()
     struct tm tm_now;
     localtime_r(&now, &tm_now);
     char buf[16];
-    snprintf(buf, sizeof(buf), "%02d:%02d:%02d", tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec);
+    snprintf(buf, sizeof(buf), "%02d:%02d:%02d",
+             tm_now.tm_hour, tm_now.tm_min, tm_now.tm_sec);
     return std::string(buf);
 }
 
@@ -62,7 +48,8 @@ static float get_time_seconds()
 {
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return static_cast<float>(ts.tv_sec) + static_cast<float>(ts.tv_nsec) / 1e9f;
+    return static_cast<float>(ts.tv_sec) +
+           static_cast<float>(ts.tv_nsec) / 1e9f;
 }
 
 static std::string shorten_machine_name(const std::string& machine)
@@ -70,7 +57,7 @@ static std::string shorten_machine_name(const std::string& machine)
     if (machine.find("raspberrypi4") != std::string::npos) return "RPI4";
     if (machine.find("qemuarm")      != std::string::npos) return "QEMU";
     if (machine.find("jetson")       != std::string::npos) return "JETSON";
-    return machine; // fallback - show raw value if unrecognized
+    return machine;
 }
 
 struct BuildInfo {
@@ -88,18 +75,24 @@ static BuildInfo load_build_info()
     while (std::getline(f, line)) {
         auto pos = line.find(": ");
         if (pos == std::string::npos) continue;
-
         std::string key = line.substr(0, pos);
         std::string val = line.substr(pos + 2);
-
         if (key == "Build date") info.build_date = val;
         else if (key == "Machine") info.machine = shorten_machine_name(val);
     }
     return info;
 }
 
+// ---------------------------------------------------------------------------
+// Signal handler
+// ---------------------------------------------------------------------------
+
 static volatile bool g_running = true;
 static void signal_handler(int) { g_running = false; }
+
+// ---------------------------------------------------------------------------
+// main
+// ---------------------------------------------------------------------------
 
 int main()
 {
@@ -144,6 +137,11 @@ int main()
     else
         std::cout << "[redis] Connected\n";
 
+    // DisplayStateReader owns its own RedisClient
+    DisplayStateReader display_reader(
+        std::make_unique<RedisClient>(cfg.redis_host, cfg.redis_port)
+    );
+
     Safemon::TextRenderer textRenderer;
     textRenderer.Init("/etc/safemon/JetBrainsMono-Regular.ttf");
 
@@ -166,76 +164,18 @@ int main()
     uint32_t prev_fb_id = 0;
 #endif
 
-    time_t start_time = time(nullptr);
-    LastFrameTracker frame_tracker;
     BuildInfo build_info = load_build_info();
 
     while (g_running) {
 
-        Safemon::DashboardState state;
-        state.redis_ok = redis_ok;
+        // Redis state via DisplayStateReader
+        DashboardState state = display_reader.read(redis_ok);
 
-        state.clock  = format_clock();
-        state.uptime = format_system_uptime();
-
+        // System state (display-side, not Redis)
+        state.clock          = format_clock();
+        state.uptime         = format_system_uptime();
         state.footer_machine = build_info.machine;
         state.footer_build   = build_info.build_date;
-
-        if (redis_ok) {
-            redisReply* reply = (redisReply*)redisCommand(redis,
-                                "LINDEX safemon:can:frames 0");
-            if (!reply) {
-                redis_ok = false;
-                state.can_ok = false;
-            } else if (reply->type == REDIS_REPLY_STRING) {
-                state.last_frame = std::string(reply->str, reply->len);
-                update_frame_tracker(frame_tracker, state.last_frame);
-
-                double elapsed = difftime(time(nullptr), frame_tracker.last_change_time);
-                char detail1_buf[64];
-                snprintf(detail1_buf, sizeof(detail1_buf), "No new frame received %.1fs", elapsed);
-                state.fault_detail1 = detail1_buf;
-
-                state.fault_detail2 = "Last known ID " + extract_can_id(state.last_frame);
-
-                state.can_ok     = true;
-            } else {
-                state.can_ok = false;
-            }
-            if (reply) freeReplyObject(reply);
-        }
-
-        if (redis_ok) {
-            redisReply* cnt = (redisReply*)redisCommand(redis,
-                            "LLEN safemon:can:frames");
-            if (!cnt) {
-                redis_ok = false;
-            } else if (cnt->type == REDIS_REPLY_INTEGER) {
-                state.frame_count = cnt->integer;
-            }
-            if (cnt) freeReplyObject(cnt);
-        }
-
-        if (redis_ok) {
-            redisReply* fault = (redisReply*)redisCommand(redis,
-                                "GET safemon:faults:current");
-            if (!fault) {
-                redis_ok = false;
-                state.fault_code = "APP DOWN";
-            } else if (fault->type == REDIS_REPLY_STRING) {
-                state.fault_code = std::string(fault->str, fault->len);
-            } else {
-                state.fault_code = "APP DOWN";
-            }
-            if (fault) freeReplyObject(fault);
-        }
-
-        if (!redis_ok) {
-            state.can_ok = false;
-            state.fault_code = "APP DOWN";
-        }
-
-        state.redis_ok = redis_ok;
 
         glClearColor(0.07f, 0.11f, 0.21f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -271,7 +211,6 @@ int main()
         sleep(1);
     }
 
-    // Cleanup
 #ifndef PLATFORM_JETSON
     if (prev_bo) {
         drmModeRmFB(drm.fd, prev_fb_id);

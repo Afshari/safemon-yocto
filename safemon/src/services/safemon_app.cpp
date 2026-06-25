@@ -38,7 +38,11 @@ int main()
     );
     fault_detector.start();
 
-    GrpcServer grpc_server(cfg, "0.0.0.0:50051");
+    GrpcServer grpc_server(
+        cfg,
+        "0.0.0.0:50051",
+        std::make_unique<RedisClient>(cfg.redis_host, cfg.redis_port)
+    );
     grpc_server.start();
 
     CanBridge can_bridge(

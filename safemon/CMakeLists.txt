@@ -20,28 +20,33 @@ set(PROTO_SRC
 # ---------------------------------------------------------------------------
 add_executable(safemon-app
     src/services/safemon_app.cpp
-    src/services/grpc_server.cpp
     ${PROTO_SRC}
 )
 
 target_include_directories(safemon-app PRIVATE
     inc/services
+    lib/can_bridge/inc
+    lib/common/inc
+    lib/grpc_server/inc
     ${HIREDIS_INCLUDE}
     ${Protobuf_INCLUDE_DIRS}
     proto
-    lib/can_bridge/inc
-    lib/common/inc
 )
 
 target_link_libraries(safemon-app PRIVATE
     config
     fault_detector
     can_bridge
+    grpc_server
     ecdsa
     ${HIREDIS_LIB}
     protobuf::libprotobuf
     gRPC::grpc++
     ${ABSEIL_LIBS}
+)
+
+target_include_directories(grpc_server PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/proto
 )
 
 # ---------------------------------------------------------------------------
@@ -102,6 +107,7 @@ add_executable(safemon-display
     src/display/drm_helper.cpp
     ${EGL_HELPER_SRC}
 )
+
 if(PLATFORM_DEPS_TARGET)
     add_dependencies(safemon-display ${PLATFORM_DEPS_TARGET})
 endif()
@@ -109,6 +115,9 @@ endif()
 target_include_directories(safemon-display PRIVATE
     inc/display
     inc/third_party
+    lib/common/inc
+    lib/display_reader/inc
+    lib/fault_detector/inc
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
@@ -118,6 +127,8 @@ target_include_directories(safemon-display PRIVATE
 target_link_libraries(safemon-display PRIVATE
     config
     ecdsa
+    display_reader
+    fault_detector
     ${EGL_LIB}
     ${GLES2_LIB}
     ${DISPLAY_EXTRA_LIBS}

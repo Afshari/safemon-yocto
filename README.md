@@ -33,7 +33,7 @@ Monitors CAN bus frames, detects faults, streams fault events over gRPC, and ren
 
 ## Display Pipeline
 
-![Safemon Architecture](docs/assets/display_pipeline.svg)
+![Display Pipeline](docs/assets/display_pipeline.svg)
 
 See [docs/spec-graphics.md](docs/spec-graphics.md) for the full display pipeline, connector selection logic, and HDMI/DSI configuration details.
 
@@ -47,6 +47,9 @@ Two OpenGL ES applications render live diagnostics directly on the framebuffer â
 Both run identically across all three supported targets.
 
 ![Safemon Embedded GUI](docs/assets/embedded_gui.jpg)
+
+See [docs/embedded-gui.md](docs/embedded-gui.md) for more details about Display applications
+
 
 ## Repository Structure
 
@@ -113,3 +116,4 @@ Build tool: [kas](https://kas.readthedocs.io/) 5.3
 | [dev-guide](docs/dev-guide.md) | Build, flash, and run instructions for all targets |
 | [signing](docs/signing.md) | ECDSA key generation and config signing workflow |
 | [spec-graphics](docs/spec-graphics.md) | full display pipeline |
+| [embedded-gui](docs/embedded-gui.md) | Display applications, rendering architecture, troubleshooting |

@@ -41,3 +41,25 @@ void RedisClient::push_frame(const std::string& frame)
         redis_, "LPUSH safemon:can:frames %s", frame.c_str());
     if (reply) freeReplyObject(reply);
 }
+
+std::string RedisClient::get_fault_status()
+{
+    redisReply* reply = (redisReply*)redisCommand(
+        redis_, "GET safemon:faults:current");
+    std::string result;
+    if (reply && reply->type == REDIS_REPLY_STRING)
+        result = std::string(reply->str, reply->len);
+    if (reply) freeReplyObject(reply);
+    return result;
+}
+
+long RedisClient::get_frame_count()
+{
+    redisReply* reply = (redisReply*)redisCommand(
+        redis_, "LLEN safemon:can:frames");
+    long result = 0;
+    if (reply && reply->type == REDIS_REPLY_INTEGER)
+        result = reply->integer;
+    if (reply) freeReplyObject(reply);
+    return result;
+}
