@@ -117,6 +117,7 @@ target_include_directories(safemon-display PRIVATE
     inc/third_party
     lib/common/inc
     lib/display_reader/inc
+    lib/fault_detector/inc
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
@@ -127,6 +128,7 @@ target_link_libraries(safemon-display PRIVATE
     config
     ecdsa
     display_reader
+    fault_detector
     ${EGL_LIB}
     ${GLES2_LIB}
     ${DISPLAY_EXTRA_LIBS}
