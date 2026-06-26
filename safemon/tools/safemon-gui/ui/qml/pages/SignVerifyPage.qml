@@ -348,7 +348,6 @@ Item {
                             text: ""
                             font.pixelSize: 16
                             font.bold: true
-                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }

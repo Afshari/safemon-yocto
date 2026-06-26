@@ -7,8 +7,7 @@ from PyQt6.QtCore import QObject, pyqtSignal, pyqtSlot
 
 from core.workers import Worker
 from core.ssh_manager import SSHManager
-from core.config_manager import load_platform
-
+from core.config_manager import load_platform, load_app
 
 class DeviceStatusBackend(QObject):
 
@@ -16,6 +15,8 @@ class DeviceStatusBackend(QObject):
     checkFinished  = pyqtSignal()
     statusResult   = pyqtSignal(str, bool, str)
     connectionError = pyqtSignal(str)
+    journalLoaded  = pyqtSignal(str)
+    journalFailed  = pyqtSignal(str)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -44,6 +45,47 @@ class DeviceStatusBackend(QObject):
         self._worker.finished_ok.connect(self._on_done)
         self._worker.failed.connect(self._on_failed)
         self._worker.start()
+        
+    @pyqtSlot(str, str, str, str)
+    def fetchJournal(self, service, platform_key, username, password):
+        try:
+            config = load_platform(platform_key)
+        except Exception as e:
+            self.journalFailed.emit(str(e))
+            return
+
+        host = config.get("host", "")
+        port = config.get("port", 22)
+
+        if not host:
+            self.journalFailed.emit(f"No host configured for {platform_key}.")
+            return
+
+        try:
+            app_config = load_app()
+            lines = app_config.get("journal_lines", 50)
+        except Exception:
+            lines = 50
+
+        self._journal_worker = Worker(
+            self._run_journal, service, lines, host, port,
+            username or "root", password
+        )
+        self._journal_worker.finished_ok.connect(lambda result: self.journalLoaded.emit(str(result)))
+        self._journal_worker.failed.connect(self.journalFailed)
+        self._journal_worker.start()
+
+    def _run_journal(self, service, lines, host, port, username, password):
+        mgr = SSHManager(host, port, username, password)
+        mgr.connect()
+        try:
+            _, out, err = mgr.run_command(
+                f"journalctl -u {service} -n {lines} --no-pager"
+            )
+        finally:
+            mgr.close()
+        return out if out.strip() else err    
+    
 
     def _run_checks(self, host, port, username, password):
         mgr = SSHManager(host, port, username, password)
