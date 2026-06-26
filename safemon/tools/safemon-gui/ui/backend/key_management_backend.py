@@ -79,7 +79,7 @@ class KeyManagementBackend(QObject):
         self._scp_worker = Worker(
             self._do_copy, pub_path, host, port, username or "root", password
         )
-        self._scp_worker.finished_ok.connect(self.scpSuccess)
+        self._scp_worker.finished_ok.connect(lambda r: self.scpSuccess.emit(str(r)))
         self._scp_worker.failed.connect(self.scpFailed)
         self._scp_worker.start()
 

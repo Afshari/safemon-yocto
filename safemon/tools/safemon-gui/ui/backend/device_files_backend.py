@@ -108,7 +108,7 @@ class DeviceFilesBackend(QObject):
             self._do_copy, local_path, device_path, host, port,
             username or "root", password
         )
-        self._copy_worker.finished_ok.connect(self.copySuccess)
+        self._copy_worker.finished_ok.connect(lambda r: self.copySuccess.emit(str(r)))
         self._copy_worker.failed.connect(self.copyFailed)
         self._copy_worker.start()
 
@@ -141,7 +141,7 @@ class DeviceFilesBackend(QObject):
             self._do_copy, local_path, dest_path, host, port,
             username or "root", password
         )
-        self._transfer_worker.finished_ok.connect(self.copySuccess)
+        self._transfer_worker.finished_ok.connect(lambda r: self.copySuccess.emit(str(r)))
         self._transfer_worker.failed.connect(self.copyFailed)
         self._transfer_worker.start()
 
