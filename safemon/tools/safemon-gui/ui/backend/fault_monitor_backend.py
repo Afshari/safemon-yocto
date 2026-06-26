@@ -31,9 +31,11 @@ class FaultStreamWorker(QThread):
         self._running = True
 
         try:
+            print(f"[fault-monitor] Attempting gRPC connection to {address}")
             channel = grpc.insecure_channel(address)
             stub    = fault_pb2_grpc.FaultServiceStub(channel)
             self.connected.emit()
+            print(f"[fault-monitor] Connected successfully to {address}")
 
             for event in stub.StreamFaults(fault_pb2.StreamRequest()):
                 if not self._running:
@@ -45,9 +47,11 @@ class FaultStreamWorker(QThread):
                 )
 
         except grpc.RpcError as e:
+            print(f"[fault-monitor] gRPC error: {e.code()} - {e.details()}")
             if e.code() == grpc.StatusCode.UNAVAILABLE:
                 self.error.emit(
-                    f"Could not connect to {address} - is safemon-app running?"
+                    f"Could not connect to {address} - is safemon-app running? "
+                    f"(code={e.code()}, details={e.details()})"
                 )
             elif e.code() == grpc.StatusCode.CANCELLED:
                 pass
@@ -75,8 +79,20 @@ class FaultMonitorBackend(QObject):
         self._worker = None
 
     @pyqtSlot(str, int)
-    def connectToDevice(self, host, port):
+    def connectToDevice(self, platform_key, port):
         if self._worker and self._worker.isRunning():
+            return
+
+        try:
+            from core.config_manager import load_platform
+            config = load_platform(platform_key)
+            host = config.get("host", "")
+        except Exception as e:
+            self.connectionError.emit(f"Config error: {e}")
+            return
+
+        if not host:
+            self.connectionError.emit(f"No host configured for {platform_key}.")
             return
 
         self._worker = FaultStreamWorker(host, port)
@@ -97,3 +113,12 @@ class FaultMonitorBackend(QObject):
     @pyqtSlot()
     def isConnected(self):
         return self._worker is not None and self._worker.isRunning()
+    
+    @pyqtSlot(str, result=str)
+    def hostForPlatform(self, platform_key):
+        try:
+            from core.config_manager import load_platform
+            config = load_platform(platform_key)
+            return config.get("host", "")
+        except Exception:
+            return ""

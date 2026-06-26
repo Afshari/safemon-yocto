@@ -50,6 +50,19 @@ Item {
         }
     }
 
+    Component.onCompleted: {
+        hostField.text = faultMonitorBackend.hostForPlatform(currentTarget)
+    }
+
+    Connections {
+        target: Window.window
+        function onCurrentTargetChanged() {
+            if (!streaming) {
+                hostField.text = faultMonitorBackend.hostForPlatform(currentTarget)
+            }
+        }
+    }
+
     function logAppend(msg) {
         logBox.text += msg + "\n"
     }
@@ -78,30 +91,7 @@ Item {
                 spacing: 12
 
                 Text {
-                    text: "Host:"
-                    color: "#5f6a82"
-                    font.pixelSize: 12
-                }
-
-                TextField {
-                    id: hostField
-                    width: 200
-                    height: 32
-                    placeholderText: "IP or hostname"
-                    color: "#c3cbdd"
-                    font.pixelSize: 12
-                    background: Rectangle { color: "#2c313c"; radius: 4 }
-
-                    Component.onCompleted: {
-                        try {
-                            // auto-fill from platform config not available
-                            // directly in QML - user fills manually
-                        } catch(e) {}
-                    }
-                }
-
-                Text {
-                    text: "Port:"
+                    text: "gRPC Port:"
                     color: "#5f6a82"
                     font.pixelSize: 12
                 }
@@ -126,14 +116,14 @@ Item {
                             faultMonitorBackend.disconnectFromDevice()
                         } else {
                             faultMonitorBackend.connectToDevice(
-                                hostField.text, parseInt(portField.text)
+                                currentTarget, parseInt(portField.text)
                             )
                         }
                     }
                     background: Rectangle {
                         color: streaming
-                             ? (parent.pressed ? "#8a0606" : parent.hovered ? "#c62828" : "#c62828")
-                             : (parent.pressed ? "#18527e" : parent.hovered ? "#2a7ab8" : "#1f6aa5")
+                            ? (parent.pressed ? "#8a0606" : parent.hovered ? "#c62828" : "#c62828")
+                            : (parent.pressed ? "#18527e" : parent.hovered ? "#2a7ab8" : "#1f6aa5")
                         radius: 4
                     }
                     contentItem: Text {
