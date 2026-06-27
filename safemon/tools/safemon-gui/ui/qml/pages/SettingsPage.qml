@@ -4,7 +4,8 @@ import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
 
 Item {
-    anchors.fill: parent
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     Component.onCompleted: settingsBackend.loadAll()
 

@@ -3,7 +3,8 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 Item {
-    anchors.fill: parent
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     property bool streaming: false
 
@@ -47,19 +48,6 @@ Item {
             })
 
             eventView.positionViewAtEnd()
-        }
-    }
-
-    Component.onCompleted: {
-        hostField.text = faultMonitorBackend.hostForPlatform(currentTarget)
-    }
-
-    Connections {
-        target: Window.window
-        function onCurrentTargetChanged() {
-            if (!streaming) {
-                hostField.text = faultMonitorBackend.hostForPlatform(currentTarget)
-            }
         }
     }
 

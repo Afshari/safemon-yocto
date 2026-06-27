@@ -4,7 +4,8 @@ import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
 
 Item {
-    anchors.fill: parent
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     property var knownFileNames: []
     property string selectedLocalPath: ""
@@ -107,7 +108,7 @@ Item {
                     }
 
                     Text {
-                        text: "Device path: " + (knownFileNames.length > 0
+                        text: "Device path: " + (knownFileNames.length > 0 && deviceFilesBackend
                             ? deviceFilesBackend.devicePathForFile(knownFileCombo.currentText)
                             : "-")
                         color: "#5f6a82"
@@ -334,8 +335,8 @@ Item {
         }
         Text {
             text: "Overwrite " +
-                  deviceFilesBackend.devicePathForFile(knownFileCombo.currentText) +
-                  " on " + currentTarget + "?"
+                (deviceFilesBackend ? deviceFilesBackend.devicePathForFile(knownFileCombo.currentText) : "") +
+                " on " + currentTarget + "?"
             color: "#c3cbdd"
             font.pixelSize: 12
             wrapMode: Text.Wrap

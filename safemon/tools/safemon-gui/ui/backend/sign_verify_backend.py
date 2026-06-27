@@ -29,7 +29,7 @@ class SignVerifyBackend(QObject):
             return
 
         self._sign_worker = Worker(self._do_sign, file_path, key_path)
-        self._sign_worker.finished_ok.connect(self.signSuccess)
+        self._sign_worker.finished_ok.connect(lambda r: self.signSuccess.emit(str(r)))
         self._sign_worker.failed.connect(self.signFailed)
         self._sign_worker.start()
 
@@ -55,7 +55,7 @@ class SignVerifyBackend(QObject):
             return
 
         self._verify_worker = Worker(self._do_verify, file_path, sig_path, pub_path)
-        self._verify_worker.finished_ok.connect(self.verifySuccess)
+        self._verify_worker.finished_ok.connect(lambda r: self.verifySuccess.emit(bool(r)))
         self._verify_worker.failed.connect(self.verifyFailed)
         self._verify_worker.start()
 

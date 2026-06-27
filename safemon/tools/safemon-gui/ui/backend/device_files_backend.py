@@ -167,7 +167,6 @@ class DeviceFilesBackend(QObject):
     def _prepare_local_file(self, local_path):
         import tempfile
         ext = Path(local_path).suffix.lower()
-        print(f"[line-endings] ext={ext}, in TEXT_EXTENSIONS={ext in TEXT_EXTENSIONS}")
         if ext not in TEXT_EXTENSIONS:
             return local_path, False
 

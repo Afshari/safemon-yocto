@@ -4,7 +4,8 @@ import QtQuick.Layouts 1.15
 import QtQuick.Dialogs
 
 Item {
-    anchors.fill: parent
+    Layout.fillWidth: true
+    Layout.fillHeight: true
 
     property string signFilePath: ""
     property string signKeyPath: ""
@@ -17,32 +18,32 @@ Item {
 
         function onSignSuccess(sigPath) {
             logBox.text += "OK: Signature written -> " + sigPath + "\n"
-            resultLabel.text = "SIGNED"
-            resultLabel.color = "#4caf50"
+            signResultLabel.text = "SIGNED"
+            signResultLabel.color = "#4caf50"
         }
 
         function onSignFailed(error) {
             logBox.text += "ERROR: " + error + "\n"
-            resultLabel.text = "SIGN FAILED"
-            resultLabel.color = "#c62828"
+            signResultLabel.text = "SIGN FAILED"
+            signResultLabel.color = "#c62828"
         }
 
         function onVerifySuccess(isValid) {
             if (isValid) {
                 logBox.text += "OK: Signature is VALID.\n"
-                resultLabel.text = "VALID"
-                resultLabel.color = "#4caf50"
+                verifyResultLabel.text = "VALID"
+                verifyResultLabel.color = "#4caf50"
             } else {
                 logBox.text += "FAIL: Signature is INVALID.\n"
-                resultLabel.text = "INVALID"
-                resultLabel.color = "#c62828"
+                verifyResultLabel.text = "INVALID"
+                verifyResultLabel.color = "#c62828"
             }
         }
 
         function onVerifyFailed(error) {
             logBox.text += "ERROR: " + error + "\n"
-            resultLabel.text = "VERIFY FAILED"
-            resultLabel.color = "#c62828"
+            verifyResultLabel.text = "VERIFY FAILED"
+            verifyResultLabel.color = "#c62828"
         }
     }
 
@@ -91,12 +92,14 @@ Item {
             RowLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 16
+                spacing: 0
 
                 // Sign section
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: parent.width / 2 - 16
+                    Layout.fillWidth: false
                     spacing: 8
+                    Layout.rightMargin: 8
 
                     Text {
                         text: "Sign File"
@@ -114,6 +117,7 @@ Item {
                             height: 32
                             text: signFilePath
                             placeholderText: "File to sign"
+                            placeholderTextColor: "#5f6a82"
                             color: "#c3cbdd"
                             font.pixelSize: 12
                             readOnly: true
@@ -149,6 +153,7 @@ Item {
                             height: 32
                             text: signKeyPath
                             placeholderText: "Private key (.key)"
+                            placeholderTextColor: "#5f6a82"
                             color: "#c3cbdd"
                             font.pixelSize: 12
                             readOnly: true
@@ -175,22 +180,33 @@ Item {
                         }
                     }
 
-                    Button {
-                        text: "Sign"
-                        height: 32
-                        width: 100
-                        onClicked: signVerifyBackend.signFile(signFilePath, signKeyPath)
-                        background: Rectangle {
-                            color: parent.pressed ? "#18527e"
-                                 : parent.hovered ? "#2a7ab8" : "#1f6aa5"
-                            radius: 4
+                    RowLayout {
+                        spacing: 12
+
+                        Button {
+                            text: "Sign"
+                            height: 32
+                            width: 100
+                            onClicked: signVerifyBackend.signFile(signFilePath, signKeyPath)
+                            background: Rectangle {
+                                color: parent.pressed ? "#18527e"
+                                    : parent.hovered ? "#2a7ab8" : "#1f6aa5"
+                                radius: 4
+                            }
+                            contentItem: Text {
+                                text: parent.text
+                                color: "#fff"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font.pixelSize: 12
+                            }
                         }
-                        contentItem: Text {
-                            text: parent.text
-                            color: "#fff"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 12
+
+                        Text {
+                            id: signResultLabel
+                            text: ""
+                            font.pixelSize: 16
+                            font.bold: true
                         }
                     }
                 }
@@ -204,8 +220,10 @@ Item {
 
                 // Verify section
                 ColumnLayout {
-                    Layout.fillWidth: true
+                    Layout.preferredWidth: parent.width / 2 - 20
+                    Layout.fillWidth: false
                     spacing: 8
+                    Layout.leftMargin: 12
 
                     Text {
                         text: "Verify File"
@@ -223,6 +241,7 @@ Item {
                             height: 32
                             text: verifyFilePath
                             placeholderText: "File to verify"
+                            placeholderTextColor: "#5f6a82"
                             color: "#c3cbdd"
                             font.pixelSize: 12
                             readOnly: true
@@ -258,6 +277,7 @@ Item {
                             height: 32
                             text: verifySigPath
                             placeholderText: "Signature (.sig)"
+                            placeholderTextColor: "#5f6a82"
                             color: "#c3cbdd"
                             font.pixelSize: 12
                             readOnly: true
@@ -293,6 +313,7 @@ Item {
                             height: 32
                             text: verifyPubPath
                             placeholderText: "Public key (.pub)"
+                            placeholderTextColor: "#5f6a82"
                             color: "#c3cbdd"
                             font.pixelSize: 12
                             readOnly: true
@@ -344,7 +365,7 @@ Item {
                         }
 
                         Text {
-                            id: resultLabel
+                            id: verifyResultLabel
                             text: ""
                             font.pixelSize: 16
                             font.bold: true

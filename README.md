@@ -11,6 +11,7 @@ Monitors CAN bus frames, detects faults, streams fault events over gRPC, and ren
   - [System Architecture](#system-architecture)
   - [Display Pipeline](#display-pipeline)
   - [Embedded GUI](#embedded-gui)
+  - [safemon-gui](#safemon-gui)
   - [Repository Structure](#repository-structure)
   - [Quick Start](#quick-start)
   - [Hardware](#hardware)
@@ -47,6 +48,12 @@ Two OpenGL ES applications render live diagnostics directly on the framebuffer â
 Both run identically across all three supported targets.
 
 ![Safemon Embedded GUI](docs/assets/embedded_gui.jpg)
+
+## safemon-gui
+
+A desktop GUI for managing safemon devices â€” key management, signing, fault monitoring, file transfer, and device status checks.
+
+See [safemon/tools/safemon-gui/README.md](safemon/tools/safemon-gui/README.md) for setup and usage.
 
 ## Repository Structure
 
