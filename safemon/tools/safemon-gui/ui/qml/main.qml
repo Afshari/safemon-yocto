@@ -106,113 +106,107 @@ Window {
                 visible: false
             }
 
-            Text {
-                anchors.left: iconApp.right
-                anchors.leftMargin: 6
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.verticalCenterOffset: -8
-                text: "Safemon"
-                color: "#c3cbdd"
-                font.pixelSize: 13
-            }
-
             // Page title bar
             Rectangle {
-                height: 25
+                height: 40
                 color: "#282c34"
                 anchors.left: toggleBtn.right
                 anchors.right: parent.right
                 anchors.bottom: parent.bottom
 
-                Row {
+                Text {
                     anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.bottom: parent.bottom
+                    anchors.verticalCenter: parent.verticalCenter
                     anchors.leftMargin: 10
-                    spacing: 8
-
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        color: "#5f6a82"
-                        font.pixelSize: 11
-                        text: ["Key Management", "Sign / Verify", "Fault Monitor",
-                            "Device Files", "Device Status", "Settings"][currentPage]
-                    }
+                    color: "#c3cbdd"
+                    text: "Safemon  \u2192  " + ["Key Management", "Sign / Verify", "Fault Monitor",
+                              "Device Files", "Device Status", "Settings"][currentPage]
+                    font.pixelSize: 14
                 }
 
                 Row {
                     anchors.right: parent.right
+                    anchors.rightMargin: 115
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
-                    anchors.rightMargin: 10
-                    spacing: 8
+                    spacing: 6
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        color: "#5f6a82"
-                        font.pixelSize: 11
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
                         text: "Target:"
                     }
 
                     ComboBox {
                         id: targetCombo
-                        height: 20
-                        width: 140
+                        height: 30
+                        width: 150
+                        anchors.verticalCenter: parent.verticalCenter
                         model: ["raspberry_pi", "jetson_orin_nano", "qemu"]
                         onCurrentValueChanged: currentTarget = currentValue
                         background: Rectangle {
-                            color: "#3c3c3c"
+                            color: "#2c313c"
                             radius: 3
+                            border.color: "#444"
+                            border.width: 1
                         }
                         contentItem: Text {
                             leftPadding: 6
                             text: targetCombo.displayText
                             color: "#c3cbdd"
-                            font.pixelSize: 11
+                            font.pixelSize: 12
                             verticalAlignment: Text.AlignVCenter
                         }
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        color: "#5f6a82"
-                        font.pixelSize: 11
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
                         text: "User:"
                     }
 
                     TextField {
                         id: usernameField
-                        height: 20
-                        width: 70
+                        height: 28
+                        width: 80
+                        anchors.verticalCenter: parent.verticalCenter
                         text: "root"
                         color: "#c3cbdd"
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                         onTextChanged: currentUsername = text
                         background: Rectangle {
-                            color: "#3c3c3c"
+                            color: "#2c313c"
                             radius: 3
+                            border.color: "#444"
+                            border.width: 1
                         }
                     }
 
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
-                        color: "#5f6a82"
-                        font.pixelSize: 11
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
                         text: "Pass:"
                     }
 
                     TextField {
                         id: passwordField
-                        height: 20
+                        height: 28
                         width: 80
+                        anchors.verticalCenter: parent.verticalCenter
                         echoMode: TextInput.Password
                         placeholderText: "empty = none"
+                        placeholderTextColor: "#5f6a82"
                         color: "#c3cbdd"
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                         onTextChanged: currentPassword = text
                         background: Rectangle {
-                            color: "#3c3c3c"
+                            color: "#2c313c"
                             radius: 3
+                            border.color: "#444"
+                            border.width: 1
                         }
                     }
                 }

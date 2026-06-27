@@ -107,7 +107,10 @@ class FaultMonitorBackend(QObject):
         if self._worker:
             self._worker.stop()
             self._worker.quit()
-            self._worker.wait()
+            self._worker.wait(3000)
+            if self._worker.isRunning():
+                self._worker.terminate()
+            self._worker = None
         self.disconnected.emit()
 
     @pyqtSlot()

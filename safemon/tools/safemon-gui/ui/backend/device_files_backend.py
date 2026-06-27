@@ -13,6 +13,11 @@ from core.workers import Worker
 from core.ssh_manager import SSHManager
 from core.config_manager import load_platform, load_device_files
 
+TEXT_EXTENSIONS = {
+    ".sh", ".conf", ".txt", ".py", ".json",
+    ".yaml", ".yml", ".ini", ".cfg", ".env",
+    ".md", ".service", ".rules", ".toml"
+}
 
 class DeviceFilesBackend(QObject):
 
@@ -146,12 +151,39 @@ class DeviceFilesBackend(QObject):
         self._transfer_worker.start()
 
     def _do_copy(self, local_path, device_path, host, port, username, password):
+        prepared_path, is_temp = self._prepare_local_file(local_path)
         mgr = SSHManager(host, port, username, password)
         mgr.connect()
         try:
             remote_dir = posixpath.dirname(device_path)
             mgr.run_command(f"mkdir -p {remote_dir}")
-            mgr.put_file(local_path, device_path)
+            mgr.put_file(prepared_path, device_path)
         finally:
             mgr.close()
-        return device_path
+            if is_temp:
+                os.remove(prepared_path)
+        return device_path    
+    
+    def _prepare_local_file(self, local_path):
+        import tempfile
+        ext = Path(local_path).suffix.lower()
+        print(f"[line-endings] ext={ext}, in TEXT_EXTENSIONS={ext in TEXT_EXTENSIONS}")
+        if ext not in TEXT_EXTENSIONS:
+            return local_path, False
+
+        try:
+            with open(local_path, "rb") as f:
+                raw = f.read()
+
+            if b"\r\n" not in raw:
+                return local_path, False
+
+            content = raw.replace(b"\r\n", b"\n").decode("utf-8", errors="replace")
+
+            fd, tmp_path = tempfile.mkstemp(suffix=ext)
+            with os.fdopen(fd, "wb") as f:
+                f.write(content.encode("utf-8"))
+            return tmp_path, True
+
+        except Exception:
+            return local_path, False
