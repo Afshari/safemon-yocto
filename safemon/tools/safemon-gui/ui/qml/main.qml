@@ -136,7 +136,7 @@ Window {
                         color: "#5f6a82"
                         font.pixelSize: 11
                         text: ["Key Management", "Sign / Verify", "Fault Monitor",
-                            "Device Files", "Device Status"][currentPage]
+                            "Device Files", "Device Status", "Settings"][currentPage]
                     }
                 }
 
@@ -284,7 +284,7 @@ Window {
                     LeftMenuBtn {
                         id: btnKeys
                         text: "Key Management"
-                        btnIconSource: "../images/svg_images/home_icon.svg"
+                        btnIconSource: "../images/svg_images/key.svg"
                         isActiveMenu: currentPage === 0
                         onClicked: currentPage = 0
                     }
@@ -292,7 +292,7 @@ Window {
                     LeftMenuBtn {
                         id: btnSign
                         text: "Sign / Verify"
-                        btnIconSource: "../images/svg_images/save_icon.svg"
+                        btnIconSource: "../images/svg_images/seal_check.svg"
                         isActiveMenu: currentPage === 1
                         onClicked: currentPage = 1
                     }
@@ -300,7 +300,7 @@ Window {
                     LeftMenuBtn {
                         id: btnFaults
                         text: "Fault Monitor"
-                        btnIconSource: "../images/svg_images/open_icon.svg"
+                        btnIconSource: "../images/svg_images/pulse.svg"
                         isActiveMenu: currentPage === 2
                         onClicked: currentPage = 2
                     }
@@ -308,7 +308,7 @@ Window {
                     LeftMenuBtn {
                         id: btnFiles
                         text: "Device Files"
-                        btnIconSource: "../images/svg_images/save_icon.svg"
+                        btnIconSource: "../images/svg_images/folder_open.svg"
                         isActiveMenu: currentPage === 3
                         onClicked: currentPage = 3
                     }
@@ -316,9 +316,17 @@ Window {
                     LeftMenuBtn {
                         id: btnStatus
                         text: "Device Status"
-                        btnIconSource: "../images/svg_images/settings_icon.svg"
+                        btnIconSource: "../images/svg_images/monitor.svg"
                         isActiveMenu: currentPage === 4
                         onClicked: currentPage = 4
+                    }
+
+                    LeftMenuBtn {
+                        id: btnSettings
+                        text: "Settings"
+                        btnIconSource: "../images/svg_images/settings.svg"
+                        isActiveMenu: currentPage === 5
+                        onClicked: currentPage = 5
                     }
                 }
             }
@@ -341,6 +349,7 @@ Window {
                     FaultMonitorPage { }
                     DeviceFilesPage { }
                     DeviceStatusPage { }
+                    SettingsPage { }
                 }
             }
         }
