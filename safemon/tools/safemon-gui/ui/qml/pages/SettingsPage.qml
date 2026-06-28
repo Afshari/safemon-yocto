@@ -59,7 +59,7 @@ Item {
         // ------------------------------------------------------------------
         Rectangle {
             Layout.fillWidth: true
-            height: 220
+            height: 280
             color: "#1c1d20"
             radius: 4
 

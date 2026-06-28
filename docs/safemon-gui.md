@@ -2,6 +2,8 @@
 
 A desktop GUI application for managing and monitoring safemon devices (Raspberry Pi 4, Jetson Orin Nano, QEMU). Built with Python, PyQt6, and QML.
 
+![safemon-gui](./assets/safemon-gui-showcase.jpg)
+
 ## Features
 
 - **Key Management** — generate secp256k1 ECDSA key pairs and deploy public keys to devices

@@ -40,7 +40,7 @@ class DeviceFilesBackend(QObject):
         except Exception as e:
             self.loadFailed.emit(str(e))
 
-    @pyqtSlot(str)
+    @pyqtSlot(str, result=str)
     def devicePathForFile(self, friendly_name):
         return self._files.get(friendly_name, "")
 

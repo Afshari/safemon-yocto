@@ -74,12 +74,13 @@ Item {
             RowLayout {
                 anchors.fill: parent
                 anchors.margins: 12
-                spacing: 16
+                spacing: 0
 
                 // Known Files section
                 ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
+                    Layout.preferredWidth: parent.width / 2 - 8
+                    Layout.fillWidth: false
+                    Layout.rightMargin: 8
 
                     Text {
                         text: "Known Files"
@@ -108,10 +109,10 @@ Item {
                     }
 
                     Text {
-                        text: "Device path: " + (knownFileNames.length > 0 && deviceFilesBackend
-                            ? deviceFilesBackend.devicePathForFile(knownFileCombo.currentText)
+                        text: "Device path: " + (knownFileCombo.currentText !== "" && deviceFilesBackend
+                            ? (deviceFilesBackend.devicePathForFile(knownFileCombo.currentText) || "-")
                             : "-")
-                        color: "#5f6a82"
+                        color: "#c3cbdd"
                         font.pixelSize: 11
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -119,7 +120,7 @@ Item {
 
                     Text {
                         text: "Local: " + (selectedLocalPath !== "" ? selectedLocalPath : "-")
-                        color: "#5f6a82"
+                        color: "#c3cbdd"
                         font.pixelSize: 11
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -195,8 +196,9 @@ Item {
 
                 // File Transfer section
                 ColumnLayout {
-                    Layout.fillWidth: true
-                    spacing: 8
+                    Layout.preferredWidth: parent.width / 2 - 8
+                    Layout.fillWidth: false
+                    Layout.leftMargin: 12
 
                     Text {
                         text: "File Transfer"
@@ -207,7 +209,7 @@ Item {
 
                     Text {
                         text: "Local: " + (transferLocalPath !== "" ? transferLocalPath : "-")
-                        color: "#5f6a82"
+                        color: "#c3cbdd"
                         font.pixelSize: 11
                         elide: Text.ElideRight
                         Layout.fillWidth: true
@@ -236,6 +238,7 @@ Item {
                         Layout.fillWidth: true
                         height: 32
                         placeholderText: "Destination on device (e.g. /home/root/)"
+                        placeholderTextColor: "#5f6a82"
                         color: "#c3cbdd"
                         font.pixelSize: 12
                         background: Rectangle { color: "#2c313c"; radius: 4 }

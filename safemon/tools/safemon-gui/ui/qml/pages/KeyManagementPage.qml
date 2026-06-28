@@ -189,6 +189,25 @@ Item {
                         }
                     }
                 }
+
+                RowLayout {
+                    spacing: 8
+                    Layout.fillWidth: true
+
+                    Text {
+                        text: "Destination on device:"
+                        color: "#c3cbdd"
+                        font.pixelSize: 11
+                    }
+
+                    Text {
+                        Layout.fillWidth: true
+                        height: 32
+                        text: "/etc/safemon/pki/safemon.pub"
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
+                    }
+                }
             }
         }
 

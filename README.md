@@ -51,7 +51,9 @@ Both run identically across all three supported targets.
 
 ## safemon-gui
 
-A desktop GUI for managing safemon devices — key management, signing, fault monitoring, file transfer, and device status checks.
+A desktop management tool for safemon devices, built with Python and Qt (PyQt6 + QML). Supports key management, file signing, live fault monitoring, and device status checks.
+
+![safemon-gui](docs/assets/safemon-gui-showcase.jpg)
 
 See [safemon/tools/safemon-gui/README.md](safemon/tools/safemon-gui/README.md) for setup and usage.
 
