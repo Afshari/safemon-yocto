@@ -55,7 +55,7 @@ A desktop management tool for safemon devices, built with Python and Qt (PyQt6 +
 
 ![safemon-gui](docs/assets/safemon-gui-showcase.jpg)
 
-See [safemon/tools/safemon-gui/README.md](safemon/tools/safemon-gui/README.md) for setup and usage.
+See [docs/safemon-gui.md](docs/safemon-gui.md) for setup and usage.
 
 ## Repository Structure
 
