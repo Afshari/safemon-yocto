@@ -1,0 +1,436 @@
+import QtQuick 2.15
+import QtQuick.Window 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+import "controls"
+import "pages"
+
+Window {
+    id: mainWindow
+    width: 1100
+    height: 700
+    minimumWidth: 900
+    minimumHeight: 600
+    visible: true
+    title: "Safemon"
+    color: "#00000000"
+    flags: Qt.Window | Qt.FramelessWindowHint
+
+    property int windowStatus: 0
+    property int windowMargin: 10
+    property int currentPage: 0
+
+    property string currentTarget: "raspberry_pi"
+    property string currentUsername: "root"
+    property string currentPassword: ""
+
+    QtObject {
+        id: internal
+
+        function maximizeRestore() {
+            if (windowStatus === 0) {
+                mainWindow.showMaximized()
+                windowStatus = 1
+                windowMargin = 0
+                resizeLeft.visible = false
+                resizeRight.visible = false
+                resizeBottom.visible = false
+                btnMaximizeRestore.btnIconSource = "../images/svg_images/restore_icon.svg"
+            } else {
+                mainWindow.showNormal()
+                windowStatus = 0
+                windowMargin = 10
+                resizeLeft.visible = true
+                resizeRight.visible = true
+                resizeBottom.visible = true
+                btnMaximizeRestore.btnIconSource = "../images/svg_images/maximize_icon.svg"
+            }
+        }
+
+        function ifMaximizedWindowRestore() {
+            if (windowStatus === 1) {
+                mainWindow.showNormal()
+                windowStatus = 0
+                windowMargin = 10
+                resizeLeft.visible = true
+                resizeRight.visible = true
+                resizeBottom.visible = true
+                btnMaximizeRestore.btnIconSource = "../images/svg_images/maximize_icon.svg"
+            }
+        }
+    }
+
+    Rectangle {
+        id: bg
+        color: "#2c313c"
+        border.color: "#383e4c"
+        border.width: 1
+        anchors.fill: parent
+        anchors.margins: windowMargin
+
+        // ------------------------------------------------------------------
+        // Top bar
+        // ------------------------------------------------------------------
+        Rectangle {
+            id: topBar
+            height: 60
+            color: "#1c1d20"
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: parent.top
+
+            ToggleButton {
+                id: toggleBtn
+                anchors.left: parent.left
+                anchors.top: parent.top
+                onClicked: animationMenu.running = true
+            }
+
+            DragHandler {
+                onActiveChanged: if (active) {
+                    mainWindow.startSystemMove()
+                    internal.ifMaximizedWindowRestore()
+                }
+            }
+
+            Image {
+                id: iconApp
+                width: 22
+                height: 22
+                anchors.left: toggleBtn.right
+                anchors.leftMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.verticalCenterOffset: -8
+                source: "images/svg_images/icon_app_top.svg"
+                fillMode: Image.PreserveAspectFit
+                visible: false
+            }
+
+            // Page title bar
+            Rectangle {
+                height: 40
+                color: "#282c34"
+                anchors.left: toggleBtn.right
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+
+                Text {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.leftMargin: 10
+                    color: "#c3cbdd"
+                    text: "Safemon  \u2192  " + ["Key Management", "Sign / Verify", "Fault Monitor",
+                              "Device Files", "Device Status", "Settings"][currentPage]
+                    font.pixelSize: 14
+                }
+
+                Row {
+                    anchors.right: parent.right
+                    anchors.rightMargin: 115
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    spacing: 6
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
+                        text: "Target:"
+                    }
+
+                    ComboBox {
+                        id: targetCombo
+                        height: 30
+                        width: 150
+                        anchors.verticalCenter: parent.verticalCenter
+                        model: ["raspberry_pi", "jetson_orin_nano", "qemu"]
+                        onCurrentValueChanged: currentTarget = currentValue
+                        background: Rectangle {
+                            color: "#2c313c"
+                            radius: 3
+                            border.color: "#444"
+                            border.width: 1
+                        }
+                        contentItem: Text {
+                            leftPadding: 6
+                            text: targetCombo.displayText
+                            color: "#c3cbdd"
+                            font.pixelSize: 12
+                            verticalAlignment: Text.AlignVCenter
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
+                        text: "User:"
+                    }
+
+                    TextField {
+                        id: usernameField
+                        height: 28
+                        width: 80
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "root"
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
+                        onTextChanged: currentUsername = text
+                        background: Rectangle {
+                            color: "#2c313c"
+                            radius: 3
+                            border.color: "#444"
+                            border.width: 1
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
+                        text: "Pass:"
+                    }
+
+                    TextField {
+                        id: passwordField
+                        height: 28
+                        width: 80
+                        anchors.verticalCenter: parent.verticalCenter
+                        echoMode: TextInput.Password
+                        placeholderText: "empty = none"
+                        placeholderTextColor: "#5f6a82"
+                        color: "#c3cbdd"
+                        font.pixelSize: 12
+                        onTextChanged: currentPassword = text
+                        background: Rectangle {
+                            color: "#2c313c"
+                            radius: 3
+                            border.color: "#444"
+                            border.width: 1
+                        }
+                    }
+                }
+            }
+
+            // Window control buttons
+            Row {
+                anchors.right: parent.right
+                anchors.top: parent.top
+                height: 35
+
+                TopBarButton {
+                    id: btnMinimize
+                    btnIconSource: "../images/svg_images/minimize_icon.svg"
+                    onClicked: mainWindow.showMinimized()
+                }
+
+                TopBarButton {
+                    id: btnMaximizeRestore
+                    btnIconSource: "../images/svg_images/maximize_icon.svg"
+                    onClicked: internal.maximizeRestore()
+                }
+
+                TopBarButton {
+                    id: btnClose
+                    btnColorClicked: "#c0392b"
+                    btnIconSource: "../images/svg_images/close_icon.svg"
+                    onClicked: mainWindow.close()
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Content area
+        // ------------------------------------------------------------------
+        Rectangle {
+            id: contentArea
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.top: topBar.bottom
+            anchors.bottom: statusBar.top
+            color: "transparent"
+
+            // Sidebar
+            Rectangle {
+                id: leftMenu
+                width: 70
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                color: "#1c1d20"
+                clip: true
+
+                PropertyAnimation {
+                    id: animationMenu
+                    target: leftMenu
+                    property: "width"
+                    to: leftMenu.width === 70 ? 250 : 70
+                    duration: 500
+                    easing.type: Easing.InOutQuint
+                }
+
+                Column {
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    clip: true
+
+                    LeftMenuBtn {
+                        id: btnKeys
+                        text: "Key Management"
+                        btnIconSource: "../images/svg_images/key.svg"
+                        isActiveMenu: currentPage === 0
+                        onClicked: currentPage = 0
+                    }
+
+                    LeftMenuBtn {
+                        id: btnSign
+                        text: "Sign / Verify"
+                        btnIconSource: "../images/svg_images/seal_check.svg"
+                        isActiveMenu: currentPage === 1
+                        onClicked: currentPage = 1
+                    }
+
+                    LeftMenuBtn {
+                        id: btnFaults
+                        text: "Fault Monitor"
+                        btnIconSource: "../images/svg_images/pulse.svg"
+                        isActiveMenu: currentPage === 2
+                        onClicked: currentPage = 2
+                    }
+
+                    LeftMenuBtn {
+                        id: btnFiles
+                        text: "Device Files"
+                        btnIconSource: "../images/svg_images/folder_open.svg"
+                        isActiveMenu: currentPage === 3
+                        onClicked: currentPage = 3
+                    }
+
+                    LeftMenuBtn {
+                        id: btnStatus
+                        text: "Device Status"
+                        btnIconSource: "../images/svg_images/monitor.svg"
+                        isActiveMenu: currentPage === 4
+                        onClicked: currentPage = 4
+                    }
+
+                    LeftMenuBtn {
+                        id: btnSettings
+                        text: "Settings"
+                        btnIconSource: "../images/svg_images/settings.svg"
+                        isActiveMenu: currentPage === 5
+                        onClicked: currentPage = 5
+                    }
+                }
+            }
+
+            // Page area
+            Rectangle {
+                id: pageArea
+                anchors.left: leftMenu.right
+                anchors.right: parent.right
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                color: "#2c313c"
+
+                StackLayout {
+                    anchors.fill: parent
+                    currentIndex: currentPage
+
+                    KeyManagementPage { }
+                    SignVerifyPage { }
+                    FaultMonitorPage { }
+                    DeviceFilesPage { }
+                    DeviceStatusPage { }
+                    SettingsPage { }
+                }
+            }
+        }
+
+        // ------------------------------------------------------------------
+        // Status bar
+        // ------------------------------------------------------------------
+        Rectangle {
+            id: statusBar
+            height: 28
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            color: "#1c1d20"
+
+            Text {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: 16
+                text: "Safemon GUI"
+                color: "#5f6a82"
+                font.pixelSize: 11
+            }
+
+            Image {
+                id: resizeImg
+                anchors.right: parent.right
+                anchors.bottom: parent.bottom
+                anchors.margins: 4
+                width: 16
+                height: 16
+                source: "images/svg_images/resize_icon.svg"
+                fillMode: Image.PreserveAspectFit
+                visible: false
+            }
+
+            DragHandler {
+                target: null
+                onActiveChanged: if (active)
+                    mainWindow.startSystemResize(Qt.RightEdge | Qt.BottomEdge)
+            }
+        }
+    }
+
+    // Resize edges
+    MouseArea {
+        id: resizeLeft
+        width: 10
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 10
+        anchors.topMargin: 10
+        cursorShape: Qt.SizeHorCursor
+        DragHandler {
+            target: null
+            onActiveChanged: if (active) mainWindow.startSystemResize(Qt.LeftEdge)
+        }
+    }
+
+    MouseArea {
+        id: resizeRight
+        width: 10
+        anchors.right: parent.right
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 10
+        anchors.topMargin: 10
+        cursorShape: Qt.SizeHorCursor
+        DragHandler {
+            target: null
+            onActiveChanged: if (active) mainWindow.startSystemResize(Qt.RightEdge)
+        }
+    }
+
+    MouseArea {
+        id: resizeBottom
+        height: 10
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.bottom: parent.bottom
+        anchors.rightMargin: 10
+        anchors.leftMargin: 10
+        cursorShape: Qt.SizeVerCursor
+        DragHandler {
+            target: null
+            onActiveChanged: if (active) mainWindow.startSystemResize(Qt.BottomEdge)
+        }
+    }
+}

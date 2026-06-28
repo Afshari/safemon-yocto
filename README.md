@@ -11,6 +11,7 @@ Monitors CAN bus frames, detects faults, streams fault events over gRPC, and ren
   - [System Architecture](#system-architecture)
   - [Display Pipeline](#display-pipeline)
   - [Embedded GUI](#embedded-gui)
+  - [safemon-gui](#safemon-gui)
   - [Repository Structure](#repository-structure)
   - [Quick Start](#quick-start)
   - [Hardware](#hardware)
@@ -48,8 +49,13 @@ Both run identically across all three supported targets.
 
 ![Safemon Embedded GUI](docs/assets/embedded_gui.jpg)
 
-See [docs/embedded-gui.md](docs/embedded-gui.md) for more details about Display applications
+## safemon-gui
 
+A desktop management tool for safemon devices, built with Python and Qt (PyQt6 + QML). Supports key management, file signing, live fault monitoring, and device status checks.
+
+![safemon-gui](docs/assets/safemon-gui-showcase.jpg)
+
+See [safemon/tools/safemon-gui/README.md](safemon/tools/safemon-gui/README.md) for setup and usage.
 
 ## Repository Structure
 

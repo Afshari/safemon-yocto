@@ -1,5 +1,5 @@
 {
-  "host": "localhost",
+  "host": "172.19.7.64",
   "user": "root",
   "port": 2222,
   "description": "QEMU"
