@@ -57,6 +57,25 @@ WSLg is included by default on Windows 11 and provides the display window for QE
 
 ---
 
+## First-Time Setup
+
+### WiFi Configuration
+
+The WiFi credentials file is not committed to the repo. Before building, create it from the template:
+
+    cp meta-safemon/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf.template \
+       meta-safemon/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf
+
+Edit the file and fill in your WiFi credentials:
+
+    vim meta-safemon/recipes-connectivity/wpa-supplicant/files/wpa_supplicant.conf
+
+The file is already listed in `.gitignore` -- it will never be committed accidentally.
+
+This step is required on every new machine before the first `kas build`.
+
+---
+
 ## Repository Structure
 
     safemon-yocto/
