@@ -1,0 +1,109 @@
+<UserControl x:Class="SafemonGui.Views.Pages.FaultMonitorPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="100"/>
+        </Grid.RowDefinitions>
+
+        <!-- Connection bar -->
+        <Border Grid.Row="0" Background="{StaticResource BgTitleStripBrush}" CornerRadius="4" Padding="16" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="100"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="gRPC Port:" Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="12" VerticalAlignment="Center"/>
+
+                <TextBox Grid.Column="2" Style="{StaticResource DarkTextBoxStyle}" Height="28"
+                         Text="{Binding GrpcPort, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Button Grid.Column="4" Style="{StaticResource AccentButtonStyle}" Content="Connect"
+                        Width="90" Height="28"
+                        Command="{Binding ConnectCommand}"
+                        IsEnabled="{Binding IsConnected, Converter={StaticResource InverseBoolConverter}}"/>
+
+                <Button Grid.Column="6" Style="{StaticResource SecondaryButtonStyle}" Content="Clear"
+                        Width="70" Height="28"
+                        Command="{Binding ClearCommand}"/>
+
+                <TextBlock Grid.Column="7" VerticalAlignment="Center" Margin="10,0,0,0" FontSize="12"
+                           Text="{Binding IsConnected, Converter={StaticResource ConnectionStatusConverter}}"
+                           Foreground="{Binding IsConnected, Converter={StaticResource ConnectionStatusBrushConverter}}"/>
+
+                <TextBlock Grid.Column="8" VerticalAlignment="Center" FontSize="12"
+                           Foreground="{StaticResource TextMutedBrush}">
+                    <Run Text="{Binding EventCount, Mode=OneWay}"/>
+                    <Run Text=" events"/>
+                </TextBlock>
+            </Grid>
+        </Border>
+
+        <!-- Column headers -->
+        <Grid Grid.Row="1" Margin="12,0,12,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="180"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Timestamp" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+            <TextBlock Grid.Column="1" Text="Status" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+            <TextBlock Grid.Column="2" Text="Source" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+            <TextBlock Grid.Column="3" Text="Signature" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+        </Grid>
+
+        <!-- Event list -->
+        <Border Grid.Row="2" Background="#1A1D23" CornerRadius="4" Margin="0,0,0,10">
+            <ListView ItemsSource="{Binding Events}" Background="Transparent" BorderThickness="0"
+                      ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Background" Value="Transparent"/>
+                        <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}"/>
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="0,4"/>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="220"/>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Timestamp}" FontFamily="Consolas" FontSize="12"/>
+                            <TextBlock Grid.Column="1" Text="{Binding Status}" FontFamily="Consolas" FontSize="12"
+                                       Foreground="{Binding StatusColorCategory, Converter={StaticResource FaultStatusToBrushConverter}}"/>
+                            <TextBlock Grid.Column="2" Text="{Binding Source}" FontFamily="Consolas" FontSize="12"/>
+                            <TextBlock Grid.Column="3" Text="{Binding Signature}" FontFamily="Consolas" FontSize="12"/>
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+
+        <!-- Connection log -->
+        <Border Grid.Row="3" Background="#1A1D23" CornerRadius="4" Padding="10">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock Text="{Binding ConnectionLog}" Foreground="{StaticResource TextPrimaryBrush}"
+                           FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>

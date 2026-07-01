@@ -57,6 +57,7 @@ public partial class MainWindowViewModel : ObservableObject
         {
             0 => CreateKeyManagementViewModel(),
             1 => _serviceProvider.GetRequiredService<SignVerifyViewModel>(),
+            2 => CreateFaultMonitorViewModel(),
             3 => CreateDeviceFilesViewModel(),
             4 => CreateDeviceStatusViewModel(),
             5 => _serviceProvider.GetRequiredService<SettingsViewModel>(),
@@ -88,6 +89,13 @@ public partial class MainWindowViewModel : ObservableObject
         vm.Target = CurrentTarget;
         vm.Username = CurrentUsername;
         vm.Password = CurrentPassword;
+        return vm;
+    }
+
+    private FaultMonitorViewModel CreateFaultMonitorViewModel()
+    {
+        var vm = _serviceProvider.GetRequiredService<FaultMonitorViewModel>();
+        vm.Target = CurrentTarget;
         return vm;
     }
 

@@ -15,6 +15,9 @@
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:ServiceStatusToBrushConverter x:Key="ServiceStatusToBrushConverter"/>
             <converters:AutoRefreshLabelConverter x:Key="AutoRefreshLabelConverter"/>
+            <converters:ConnectionStatusConverter x:Key="ConnectionStatusConverter"/>
+            <converters:ConnectionStatusBrushConverter x:Key="ConnectionStatusBrushConverter"/>
+            <converters:FaultStatusToBrushConverter x:Key="FaultStatusToBrushConverter"/>
             <DataTemplate DataType="{x:Type vm:KeyManagementViewModel}">
                 <views:KeyManagementPage/>
             </DataTemplate>
@@ -29,6 +32,9 @@
             </DataTemplate>
             <DataTemplate DataType="{x:Type vm:DeviceFilesViewModel}">
                 <views:DeviceFilesPage/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type vm:FaultMonitorViewModel}">
+                <views:FaultMonitorPage/>
             </DataTemplate>
         </ResourceDictionary>
     </Application.Resources>

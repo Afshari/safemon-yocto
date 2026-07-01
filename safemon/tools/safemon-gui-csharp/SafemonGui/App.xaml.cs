@@ -59,6 +59,7 @@ public partial class App : Application
         services.AddTransient<DeviceStatusViewModel>();
         services.AddTransient<SettingsViewModel>();
         services.AddTransient<DeviceFilesViewModel>();
+        services.AddTransient<FaultMonitorViewModel>();
 
         services.AddSingleton<MainWindow>();
     }

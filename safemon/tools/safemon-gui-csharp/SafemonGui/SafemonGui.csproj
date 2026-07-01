@@ -26,4 +26,9 @@
   <ItemGroup>
     <Resource Include="Assets\Icons\*.svg" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Protobuf Include="Proto\fault.proto" GrpcServices="Client" />
+  </ItemGroup>
+
 </Project>
