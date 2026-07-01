@@ -57,6 +57,8 @@ public partial class App : Application
         services.AddTransient<KeyManagementViewModel>();
         services.AddTransient<SignVerifyViewModel>();
         services.AddTransient<DeviceStatusViewModel>();
+        services.AddTransient<SettingsViewModel>();
+        services.AddTransient<DeviceFilesViewModel>();
 
         services.AddSingleton<MainWindow>();
     }

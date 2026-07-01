@@ -57,8 +57,10 @@ public partial class MainWindowViewModel : ObservableObject
         {
             0 => CreateKeyManagementViewModel(),
             1 => _serviceProvider.GetRequiredService<SignVerifyViewModel>(),
+            3 => CreateDeviceFilesViewModel(),
             4 => CreateDeviceStatusViewModel(),
-            _ => null // other pages not wired in yet
+            5 => _serviceProvider.GetRequiredService<SettingsViewModel>(),
+            _ => null
         };
     }
 
@@ -74,6 +76,15 @@ public partial class MainWindowViewModel : ObservableObject
     private KeyManagementViewModel CreateKeyManagementViewModel()
     {
         var vm = _serviceProvider.GetRequiredService<KeyManagementViewModel>();
+        vm.Target = CurrentTarget;
+        vm.Username = CurrentUsername;
+        vm.Password = CurrentPassword;
+        return vm;
+    }
+
+    private DeviceFilesViewModel CreateDeviceFilesViewModel()
+    {
+        var vm = _serviceProvider.GetRequiredService<DeviceFilesViewModel>();
         vm.Target = CurrentTarget;
         vm.Username = CurrentUsername;
         vm.Password = CurrentPassword;
