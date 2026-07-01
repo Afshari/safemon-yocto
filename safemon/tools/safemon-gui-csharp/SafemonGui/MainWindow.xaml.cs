@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media.Animation;
 using SafemonGui.ViewModels;
 
 namespace SafemonGui;
@@ -9,15 +8,16 @@ public partial class MainWindow : Window
 {
     private MainWindowViewModel? _vm;
 
-    public MainWindow()
+    public MainWindow(MainWindowViewModel viewModel)
     {
         InitializeComponent();
+        DataContext = viewModel;
+        _vm = viewModel;
         Loaded += MainWindow_Loaded;
     }
 
     private void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        _vm = DataContext as MainWindowViewModel;
         if (_vm != null)
             _vm.PropertyChanged += Vm_PropertyChanged;
     }
@@ -32,11 +32,12 @@ public partial class MainWindow : Window
     {
         double targetWidth = (_vm?.IsSidebarExpanded == true) ? 250 : 70;
 
-        var animation = new DoubleAnimation
+        var animation = new System.Windows.Media.Animation.DoubleAnimation
         {
             To = targetWidth,
             Duration = TimeSpan.FromMilliseconds(300),
-            EasingFunction = new CubicEase { EasingMode = EasingMode.EaseInOut }
+            EasingFunction = new System.Windows.Media.Animation.CubicEase
+                { EasingMode = System.Windows.Media.Animation.EasingMode.EaseInOut }
         };
 
         SidebarBorder.BeginAnimation(WidthProperty, animation);

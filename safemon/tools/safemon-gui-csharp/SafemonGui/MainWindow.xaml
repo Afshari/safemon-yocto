@@ -13,10 +13,6 @@
         Background="Transparent"
         ResizeMode="CanResizeWithGrip">
 
-    <Window.DataContext>
-        <vm:MainWindowViewModel/>
-    </Window.DataContext>
-
     <Border Background="{StaticResource BgMainBrush}"
             BorderBrush="{StaticResource BorderBrush1}"
             BorderThickness="1">
@@ -220,12 +216,7 @@
                 <!-- Page host -->
                 <Border Grid.Column="1"
                         Background="{StaticResource BgMainBrush}">
-                    <TextBlock Text="{Binding PageTitle}"
-                               Foreground="{StaticResource TextMutedBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"
-                               FontSize="20"/>
-                    <!-- Real pages will be swapped in here via a ContentControl in Stage 3+ -->
+                    <ContentControl Content="{Binding CurrentPageViewModel}"/>
                 </Border>
             </Grid>
 

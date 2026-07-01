@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace SafemonGui.ViewModels;
 
@@ -10,6 +11,8 @@ public partial class MainWindowViewModel : ObservableObject
         "Key Management", "Sign / Verify", "Fault Monitor",
         "Device Files", "Device Status", "Settings"
     };
+
+    private readonly IServiceProvider _serviceProvider;
 
     [ObservableProperty]
     private int currentPageIndex;
@@ -26,11 +29,42 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private string currentPassword = string.Empty;
 
+    [ObservableProperty]
+    private object? currentPageViewModel;
+
     public string[] Targets { get; } = { "raspberry_pi", "jetson_orin_nano", "qemu" };
 
     public string PageTitle => $"Safemon  \u2192  {PageNames[CurrentPageIndex]}";
 
-    partial void OnCurrentPageIndexChanged(int value) => OnPropertyChanged(nameof(PageTitle));
+    public MainWindowViewModel(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+        UpdateCurrentPageViewModel();
+    }
+
+    partial void OnCurrentPageIndexChanged(int value)
+    {
+        OnPropertyChanged(nameof(PageTitle));
+        UpdateCurrentPageViewModel();
+    }
+
+    private void UpdateCurrentPageViewModel()
+    {
+        CurrentPageViewModel = CurrentPageIndex switch
+        {
+            0 => CreateKeyManagementViewModel(),
+            _ => null // other pages not wired in yet
+        };
+    }
+
+    private KeyManagementViewModel CreateKeyManagementViewModel()
+    {
+        var vm = _serviceProvider.GetRequiredService<KeyManagementViewModel>();
+        vm.Target = CurrentTarget;
+        vm.Username = CurrentUsername;
+        vm.Password = CurrentPassword;
+        return vm;
+    }
 
     [RelayCommand]
     private void ToggleSidebar() => IsSidebarExpanded = !IsSidebarExpanded;

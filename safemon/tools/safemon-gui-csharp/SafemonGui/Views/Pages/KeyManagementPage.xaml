@@ -1,0 +1,79 @@
+<UserControl x:Class="SafemonGui.Views.Pages.KeyManagementPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:SafemonGui.ViewModels">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Key Generation + Copy to Device panel -->
+        <Border Grid.Row="0" Background="{StaticResource BgTitleStripBrush}" CornerRadius="4"
+                Padding="20" Margin="0,0,0,16">
+            <StackPanel>
+                <TextBlock Text="Key Generation" Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <Grid Margin="0,0,0,16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0" Style="{StaticResource DarkTextBoxStyle}" Height="32"
+                             Text="{Binding KeyOutputDir, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Browse" Width="80" Height="32"
+                            Command="{Binding BrowseOutputDirCommand}" Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}"
+                            Content="Generate Key Pair" Width="140" Height="32"
+                            Command="{Binding GenerateKeyPairCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                </Grid>
+
+                <TextBlock Text="Copy Public Key to Device" Foreground="{StaticResource TextPrimaryBrush}"
+                           FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0" Style="{StaticResource DarkTextBoxStyle}" Height="32"
+                             Text="{Binding PublicKeyToUploadPath, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}"
+                            Content="Browse" Width="80" Height="32"
+                            Command="{Binding BrowsePublicKeyToUploadCommand}" Margin="0,0,8,0"/>
+
+                    <Button Grid.Column="2" Style="{StaticResource AccentButtonStyle}"
+                            Content="Copy to Device" Width="140" Height="32"
+                            Command="{Binding CopyToDeviceCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+                </Grid>
+
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Destination on device: " Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+                    <TextBlock Text="{Binding DestinationOnDevice}" Foreground="{StaticResource TextMutedBrush}" FontSize="11"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Output log -->
+        <Border Grid.Row="1" Background="#1A1D23" CornerRadius="4" Padding="12">
+            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <TextBlock Text="{Binding OutputLog}" Foreground="{StaticResource TextPrimaryBrush}"
+                           FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+            </ScrollViewer>
+        </Border>
+    </Grid>
+</UserControl>
