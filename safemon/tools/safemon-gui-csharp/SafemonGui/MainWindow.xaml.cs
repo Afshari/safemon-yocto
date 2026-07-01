@@ -66,4 +66,5 @@ public partial class MainWindow : Window
         if (DataContext is MainWindowViewModel vm && sender is System.Windows.Controls.PasswordBox pb)
             vm.CurrentPassword = pb.Password;
     }
+    
 }

@@ -55,6 +55,7 @@ public partial class App : Application
 
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<KeyManagementViewModel>();
+        services.AddTransient<SignVerifyViewModel>();
 
         services.AddSingleton<MainWindow>();
     }

@@ -53,6 +53,7 @@ public partial class MainWindowViewModel : ObservableObject
         CurrentPageViewModel = CurrentPageIndex switch
         {
             0 => CreateKeyManagementViewModel(),
+            1 => _serviceProvider.GetRequiredService<SignVerifyViewModel>(),
             _ => null // other pages not wired in yet
         };
     }
