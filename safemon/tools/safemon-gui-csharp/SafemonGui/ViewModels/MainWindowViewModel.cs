@@ -50,12 +50,25 @@ public partial class MainWindowViewModel : ObservableObject
 
     private void UpdateCurrentPageViewModel()
     {
+        if (CurrentPageViewModel is IDisposable disposable)
+            disposable.Dispose();
+
         CurrentPageViewModel = CurrentPageIndex switch
         {
             0 => CreateKeyManagementViewModel(),
             1 => _serviceProvider.GetRequiredService<SignVerifyViewModel>(),
+            4 => CreateDeviceStatusViewModel(),
             _ => null // other pages not wired in yet
         };
+    }
+
+    private DeviceStatusViewModel CreateDeviceStatusViewModel()
+    {
+        var vm = _serviceProvider.GetRequiredService<DeviceStatusViewModel>();
+        vm.Target = CurrentTarget;
+        vm.Username = CurrentUsername;
+        vm.Password = CurrentPassword;
+        return vm;
     }
 
     private KeyManagementViewModel CreateKeyManagementViewModel()

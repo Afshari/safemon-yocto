@@ -1,0 +1,87 @@
+<UserControl x:Class="SafemonGui.Views.Pages.DeviceStatusPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Service Checks -->
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Background="{StaticResource BgTitleStripBrush}" CornerRadius="4" Padding="16">
+                <StackPanel>
+                    <TextBlock Text="Service Checks" Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="14" FontWeight="Bold" Margin="0,0,0,10"/>
+
+                    <Button Style="{StaticResource AccentButtonStyle}" Content="Check All"
+                            HorizontalAlignment="Stretch" Height="30" Margin="0,0,0,12"
+                            Command="{Binding CheckAllCommand}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"/>
+
+                    <ItemsControl ItemsSource="{Binding ServiceChecks}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                    <Ellipse Width="10" Height="10" Margin="0,0,10,0"
+                                             Fill="{Binding Status, Converter={StaticResource ServiceStatusToBrushConverter}}"/>
+                                    <TextBlock Text="{Binding ServiceName}"
+                                               Foreground="{StaticResource TextPrimaryBrush}" FontSize="12"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <Border Grid.Column="2" Background="#1A1D23" CornerRadius="4" Padding="12">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <TextBlock Text="{Binding CheckOutputLog}" Foreground="{StaticResource TextPrimaryBrush}"
+                               FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Journal Log Viewer -->
+        <Border Grid.Row="1" Background="{StaticResource BgTitleStripBrush}" CornerRadius="4" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Text="Journal Log" Foreground="{StaticResource TextPrimaryBrush}"
+                               FontSize="14" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,16,0"/>
+
+                    <ComboBox Style="{StaticResource DarkComboBoxStyle}" Width="160" Height="30"
+                              ItemsSource="{Binding JournalServices}"
+                              SelectedItem="{Binding SelectedJournalService}"
+                              Margin="0,0,10,0"/>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="Fetch Now"
+                            Width="100" Height="30" Margin="0,0,10,0"
+                            Command="{Binding FetchJournalNowCommand}"/>
+
+                    <Button Style="{StaticResource AccentButtonStyle}" Width="150" Height="30"
+                            Content="{Binding IsAutoRefreshing, Converter={StaticResource AutoRefreshLabelConverter}}"
+                            Command="{Binding ToggleAutoRefreshCommand}"/>
+                </StackPanel>
+
+                <Border Grid.Row="1" Background="#1A1D23" CornerRadius="4" Padding="12">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <TextBlock Text="{Binding JournalOutput}" Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"/>
+                    </ScrollViewer>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
