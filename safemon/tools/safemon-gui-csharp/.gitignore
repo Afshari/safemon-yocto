@@ -1,0 +1,19 @@
+# Build outputs
+bin/
+obj/
+
+# Runtime-generated config (mirrors Python version's gitignored config/)
+SafemonGui/config/*.json
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# NuGet
+*.nupkg
+packages/
