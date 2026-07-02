@@ -46,7 +46,12 @@ Item {
 
     FolderDialog {
         id: keyDirDialog
-        onAccepted: keyDir.text = selectedFolder.toString().replace("file:///", "")
+        onAccepted: {
+            var path = selectedFolder.toString()
+            keyDir.text = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
+        }
     }
 
     ColumnLayout {

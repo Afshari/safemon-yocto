@@ -32,8 +32,10 @@ Item {
     FolderDialog {
         id: folderDialog
         onAccepted: {
-            var path = selectedFolder.toString().replace("file:///", "")
-            keyDirField.text = path
+            var path = selectedFolder.toString()
+            keyDirField.text = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
         }
     }
 
@@ -41,8 +43,10 @@ Item {
         id: pubKeyDialog
         nameFilters: ["Public key files (*.pub)"]
         onAccepted: {
-            var path = selectedFile.toString().replace("file:///", "")
-            pubKeyField.text = path
+            var path = selectedFile.toString()
+            pubKeyField.text = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
         }
     }
 
@@ -80,9 +84,7 @@ Item {
                         id: keyDirField
                         Layout.fillWidth: true
                         height: 32
-                        text: (Qt.platform.os === "windows")
-                            ? "C:/Users/" + "root" + "/.safemon"
-                            : "~/.safemon"
+                        text: keyManagementBackend.defaultKeyDir()
                         placeholderText: "Key output directory"
                         color: "#c3cbdd"
                         font.pixelSize: 12

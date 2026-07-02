@@ -94,3 +94,8 @@ class KeyManagementBackend(QObject):
         finally:
             mgr.close()
         return dest
+
+    @pyqtSlot(result=str)
+    def defaultKeyDir(self):
+        from pathlib import Path
+        return str(Path.home() / ".safemon")

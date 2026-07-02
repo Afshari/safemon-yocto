@@ -42,9 +42,11 @@ Item {
     FileDialog {
         id: knownFileLocalDialog
         onAccepted: {
-            selectedLocalPath = selectedFile.toString().replace("file:///", "")
+            var path = selectedFile.toString()
+            selectedLocalPath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
             logBox.text += "Selected local file: " + selectedLocalPath + "\n"
-            // preview content
             deviceFilesBackend.loadKnownFiles()
         }
     }
@@ -52,7 +54,10 @@ Item {
     FileDialog {
         id: transferFileDialog
         onAccepted: {
-            transferLocalPath = selectedFile.toString().replace("file:///", "")
+            var path = selectedFile.toString()
+            transferLocalPath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
             logBox.text += "Selected for transfer: " + transferLocalPath + "\n"
         }
     }

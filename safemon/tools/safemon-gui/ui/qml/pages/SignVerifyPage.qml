@@ -49,30 +49,55 @@ Item {
 
     FileDialog {
         id: signFileDialog
-        onAccepted: signFilePath = selectedFile.toString().replace("file:///", "")
+        onAccepted: {
+            var path = selectedFile.toString()
+            signFilePath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
+        }
     }
 
     FileDialog {
         id: signKeyDialog
         nameFilters: ["Key files (*.key)"]
-        onAccepted: signKeyPath = selectedFile.toString().replace("file:///", "")
+        onAccepted: {
+            var path = selectedFile.toString()
+            signKeyPath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
+        }
     }
 
     FileDialog {
         id: verifyFileDialog
-        onAccepted: verifyFilePath = selectedFile.toString().replace("file:///", "")
+        onAccepted: {
+            var path = selectedFile.toString()
+            verifyFilePath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
+        }
     }
 
     FileDialog {
         id: verifySigDialog
         nameFilters: ["Signature files (*.sig)"]
-        onAccepted: verifySigPath = selectedFile.toString().replace("file:///", "")
+        onAccepted: {
+            var path = selectedFile.toString()
+            verifySigPath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
+        }
     }
 
     FileDialog {
         id: verifyPubDialog
         nameFilters: ["Public key files (*.pub)"]
-        onAccepted: verifyPubPath = selectedFile.toString().replace("file:///", "")
+        onAccepted: {
+            var path = selectedFile.toString()
+            verifyPubPath = Qt.platform.os === "windows"
+                ? path.replace("file:///", "")
+                : path.replace("file://", "")
+        }
     }
 
     ColumnLayout {
