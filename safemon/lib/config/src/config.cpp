@@ -58,6 +58,12 @@ SafemonConfig load_config(const std::string& path) {
         else if (key == "redis_port")      cfg.redis_port      = std::stoi(val);
         else if (key == "known_ids")       cfg.known_ids       = parse_ids(val);
         else if (key == "timeout_seconds") cfg.timeout_seconds = std::stoi(val);
+        else if (key == "keyboard_device") cfg.keyboard_device = val;
+        else if (key == "mouse_device")    cfg.mouse_device    = val;
+        else if (key == "input_backend") {
+            if (val == "wayland") cfg.input_backend = InputBackend::Wayland;
+            else                  cfg.input_backend = InputBackend::Evdev;
+        }
         else std::cerr << "[config] Unknown key: " << key << "\n";
     }
 

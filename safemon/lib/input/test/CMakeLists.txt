@@ -5,6 +5,7 @@ add_executable(input_test
     test_input_event_types.cpp
     test_evdev_keyboard.cpp
     test_evdev_mouse.cpp
+    test_input_manager.cpp
 )
 
 target_link_libraries(input_test
@@ -12,6 +13,7 @@ target_link_libraries(input_test
         input
         GTest::gtest
         GTest::gtest_main
+        GTest::gmock
         Threads::Threads
 )
 

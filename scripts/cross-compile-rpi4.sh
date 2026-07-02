@@ -40,6 +40,8 @@ fi
 export PATH="$NATIVE_BIN:$PATH"
 mkdir -p "$REPO_ROOT/out"
 
+cd "$REPO_ROOT"
+
 BASE_FLAGS="\
   -mcpu=cortex-a72+crc \
   -mbranch-protection=standard \
@@ -110,21 +112,35 @@ case $TARGET in
       -o "$REPO_ROOT/out/$TARGET"
     ;;
   safemon-chart)
-    aarch64-poky-linux-g++ $BASE_FLAGS \
-      -lEGL -lGLESv2 -lgbm -ldrm \
-      safemon/src/display/drm_helper.cpp \
-      safemon/src/display/egl_helper_gbm.cpp \
-      safemon/src/display/waterfall_data.cpp \
-      safemon/src/display/waterfall_chart.cpp \
-      safemon/src/display/camera.cpp \
-      safemon/src/display/text_renderer.cpp \
-      safemon/src/display/axis_gizmo.cpp \
-      safemon/src/display/safemon_chart.cpp \
-      $CONFIG_SRC \
-      -I safemon/inc/display \
-      -I safemon/inc/third_party \
-      $CONFIG_INC \
+    INPUT_INC="$REPO_ROOT/safemon/lib/input/inc"
+    echo "[cross-compile] Checking input inc dir: $INPUT_INC"
+    ls "$INPUT_INC" || { echo "ERROR: input inc dir not found!"; exit 1; }
+
+    CMD=(
+      aarch64-poky-linux-g++
+      $BASE_FLAGS
+      -I"$REPO_ROOT/safemon/inc/display"
+      -I"$REPO_ROOT/safemon/inc/third_party"
+      -I"$INPUT_INC"
+      $CONFIG_INC
+      "$REPO_ROOT/safemon/src/display/drm_helper.cpp"
+      "$REPO_ROOT/safemon/src/display/egl_helper_gbm.cpp"
+      "$REPO_ROOT/safemon/src/display/waterfall_data.cpp"
+      "$REPO_ROOT/safemon/src/display/waterfall_chart.cpp"
+      "$REPO_ROOT/safemon/src/display/camera.cpp"
+      "$REPO_ROOT/safemon/src/display/text_renderer.cpp"
+      "$REPO_ROOT/safemon/src/display/axis_gizmo.cpp"
+      "$REPO_ROOT/safemon/src/display/safemon_chart.cpp"
+      "$REPO_ROOT/safemon/lib/input/src/evdev_keyboard.cpp"
+      "$REPO_ROOT/safemon/lib/input/src/evdev_mouse.cpp"
+      "$REPO_ROOT/safemon/lib/input/src/input_manager.cpp"
+      $CONFIG_SRC
+      -lEGL -lGLESv2 -lgbm -ldrm
       -o "$REPO_ROOT/out/$TARGET"
+    )
+
+    echo "[cross-compile] Running: ${CMD[*]}"
+    "${CMD[@]}"
     ;;
   *)
     echo "Unknown target: $TARGET"

@@ -155,6 +155,7 @@ endif()
 target_include_directories(safemon-chart PRIVATE
     inc/display
     inc/third_party
+    lib/input/inc
     ${HIREDIS_INCLUDE}
     ${DRM_INCLUDE}
     ${DRM_INCLUDE}/drm
@@ -163,6 +164,7 @@ target_include_directories(safemon-chart PRIVATE
 
 target_link_libraries(safemon-chart PRIVATE
     config
+    input
     ${EGL_LIB}
     ${GLES2_LIB}
     ${DISPLAY_EXTRA_LIBS}

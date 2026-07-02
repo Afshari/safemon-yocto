@@ -58,6 +58,17 @@ SRC_URI = "file://safemon/CMakeLists.txt \
            file://safemon/lib/display_reader/CMakeLists.txt \
            file://safemon/lib/display_reader/inc/display_reader.h \
            file://safemon/lib/display_reader/src/display_reader.cpp \
+           file://safemon/lib/input/CMakeLists.txt \
+           file://safemon/lib/input/inc/input_event_types.h \
+           file://safemon/lib/input/inc/iinput_device.h \
+           file://safemon/lib/input/inc/evdev_keyboard.h \
+           file://safemon/lib/input/inc/evdev_mouse.h \
+           file://safemon/lib/input/inc/input_manager.h \
+           file://safemon/lib/input/inc/wayland_input.h \
+           file://safemon/lib/input/src/evdev_keyboard.cpp \
+           file://safemon/lib/input/src/evdev_mouse.cpp \
+           file://safemon/lib/input/src/input_manager.cpp \
+           file://safemon/lib/input/src/wayland_input.cpp \
            file://rpi4/safemon.conf \
            file://rpi4/safemon.conf.sig \
            file://jetson/safemon.conf \
